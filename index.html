@@ -315,6 +315,44 @@
     .expect-item:last-child { border-bottom: none; }
     .expect-item .star { color: var(--gold); flex-shrink: 0; margin-top: .05rem; }
 
+    /* ── FLOATING FOOTBALLS ──────────────────────────── */
+    .hero-football {
+      position: absolute;
+      pointer-events: none;
+      z-index: 0;
+      font-size: var(--fb-size, 3rem);
+      opacity: var(--fb-opacity, 0.09);
+      top: var(--fb-top);
+      left: var(--fb-left);
+      animation: floatFb var(--fb-dur, 5s) ease-in-out var(--fb-delay, 0s) infinite alternate;
+      filter: drop-shadow(0 0 8px rgba(245,158,11,.25));
+    }
+    @keyframes floatFb {
+      from { transform: translateY(0px) rotate(var(--fb-rot-a, -20deg)); }
+      to   { transform: translateY(-22px) rotate(var(--fb-rot-b, 20deg)); }
+    }
+
+    /* ── FLOATING CHEER TEXT ──────────────────────────── */
+    .cd-cheer {
+      position: absolute;
+      pointer-events: none;
+      z-index: 0;
+      font-size: var(--ct-size, 1rem);
+      font-weight: 800;
+      opacity: var(--ct-opacity, 0.07);
+      top: var(--ct-top);
+      left: var(--ct-left);
+      white-space: nowrap;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--gold-bright);
+      animation: floatCheer var(--ct-dur, 5s) ease-in-out var(--ct-delay, 0s) infinite alternate;
+    }
+    @keyframes floatCheer {
+      from { transform: translateY(0px) rotate(var(--ct-rot-a, -6deg)); }
+      to   { transform: translateY(-14px) rotate(var(--ct-rot-b, 4deg)); }
+    }
+
     /* ── ANIMATIONS ──────────────────────────────────── */
 
     /* Logo entrance + pulse glow */
@@ -393,6 +431,212 @@
       animation: tabSlideUp .35s cubic-bezier(.25,.8,.25,1) both;
     }
 
+    /* ── COUNTDOWN CARD ──────────────────────────────── */
+    .countdown-card {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #1d4ed8 100%);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.4rem 1rem;
+      margin-bottom: 1.25rem;
+      color: var(--white);
+      text-align: center;
+      box-shadow: 0 4px 28px rgba(30,58,138,.35);
+      position: relative;
+      overflow: hidden;
+    }
+    .countdown-card::before {
+      content: "";
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+      pointer-events: none;
+    }
+    .cd-next-label {
+      font-size: .68rem;
+      font-weight: 800;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--gold-bright);
+      margin-bottom: .3rem;
+    }
+    .cd-vs {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -.01em;
+      display: block;
+    }
+    .cd-meta {
+      font-size: .8rem;
+      opacity: .72;
+      margin: .2rem 0 .85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .4rem;
+      flex-wrap: wrap;
+    }
+    .countdown-grid {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: .45rem;
+      margin: .25rem 0 .7rem;
+    }
+    .countdown-unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: rgba(255,255,255,.1);
+      border-radius: 8px;
+      padding: .5rem .85rem;
+      min-width: 3.4rem;
+      backdrop-filter: blur(4px);
+    }
+    .countdown-unit .cd-num {
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      color: var(--gold-bright);
+      letter-spacing: -.03em;
+    }
+    .cd-unit-label {
+      font-size: .58rem;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      opacity: .65;
+      margin-top: .2rem;
+    }
+    .countdown-sep {
+      font-size: 1.7rem;
+      font-weight: 800;
+      color: var(--gold-bright);
+      opacity: .55;
+      line-height: 1;
+      padding-bottom: .9rem;
+    }
+    .cd-arrive {
+      font-size: .75rem;
+      opacity: .65;
+      margin-top: .15rem;
+    }
+    .countdown-done {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--gold-bright);
+      padding: .75rem 0 .25rem;
+      letter-spacing: .04em;
+    }
+
+    /* ── CALENDAR BUTTONS ────────────────────────────── */
+    .cal-btns {
+      display: flex;
+      gap: .35rem;
+      margin-top: .5rem;
+      flex-wrap: wrap;
+    }
+    .cal-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .25rem;
+      font-size: .7rem;
+      font-weight: 700;
+      padding: .22rem .6rem;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity .15s, transform .15s;
+      white-space: nowrap;
+      line-height: 1.4;
+      font-family: inherit;
+    }
+    .cal-btn:hover { opacity: .82; transform: translateY(-1px); }
+    .cal-btn-google { background: #4285f4; color: #fff; }
+    .cal-btn-apple  { background: #1c1c1e; color: #fff; }
+
+    /* ── DARK MODE TOGGLE BUTTON ─────────────────────── */
+    .dark-toggle {
+      position: fixed;
+      top: .6rem;
+      right: .8rem;
+      z-index: 200;
+      background: rgba(255,255,255,.18);
+      border: none;
+      border-radius: 999px;
+      width: 2.15rem;
+      height: 2.15rem;
+      font-size: 1.05rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .2s, transform .18s;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 1px 8px rgba(0,0,0,.22);
+    }
+    .dark-toggle:hover { transform: scale(1.12); background: rgba(255,255,255,.28); }
+
+    /* ── DARK MODE ────────────────────────────────────── */
+    body.dark { background: #0f172a; color: #e2e8f0; }
+
+    body.dark .nav-bar { background: #0c1a36; }
+
+    body.dark .update-card,
+    body.dark .game-card,
+    body.dark .info-card,
+    body.dark .event-card { background: #1e293b; }
+
+    body.dark .link-card { background: #1e293b; color: #e2e8f0; border-color: transparent; }
+    body.dark .link-card:hover { border-color: var(--gold); }
+    body.dark .link-sub { color: #64748b; }
+
+    body.dark .schedule-table { background: #1e293b; }
+    body.dark .schedule-table thead tr { background: #0c1a36; }
+    body.dark .schedule-table td { border-bottom-color: #334155; color: #cbd5e1; }
+    body.dark .schedule-table tr.home-row { background: #1c2b18; }
+    body.dark .schedule-table tr.home-row:hover { background: #223320; }
+    body.dark .schedule-table tr.away-row:hover { background: #192233; }
+
+    body.dark .game-card-top { border-bottom-color: #334155; }
+    body.dark .game-card-top.home { background: #1c2b18; }
+    body.dark .game-card-top.away { background: #192233; }
+    body.dark .game-card-body .row { color: #cbd5e1; }
+
+    body.dark .section-title { color: #93c5fd; }
+    body.dark .section-title::after { background: #1e3a5f; }
+
+    body.dark .update-headline { color: #e2e8f0; }
+    body.dark .update-body p,
+    body.dark .update-body li { color: #cbd5e1; }
+    body.dark .update-body strong { color: #f1f5f9; }
+    body.dark .update-body a { color: #60a5fa; }
+    body.dark .update-body .highlight { background: #2d1f00; border-left-color: var(--gold); color: #fde68a; }
+
+    body.dark .info-card h3 { color: #93c5fd; }
+    body.dark .info-card p,
+    body.dark .info-card li { color: #cbd5e1; }
+    body.dark .fee-row { border-bottom-color: #334155; color: #cbd5e1; }
+    body.dark .fee-amount { color: #93c5fd; }
+    body.dark .contact-row { border-bottom-color: #334155; color: #cbd5e1; }
+    body.dark .contact-row a { color: #60a5fa; }
+
+    body.dark .expect-item { color: #cbd5e1; border-bottom-color: #334155; }
+
+    body.dark .event-body h4 { color: #e2e8f0; }
+    body.dark .event-body p { color: #94a3b8; }
+    body.dark .event-body .event-date { color: var(--gold-bright); }
+
+    body.dark .game-date { color: #93c5fd; }
+    body.dark .game-time,
+    body.dark .game-venue { color: #64748b; }
+    body.dark .game-venue a { color: #60a5fa; }
+
+    body.dark .footer { background: #1e293b; border-top-color: #334155; color: #64748b; }
+    body.dark .footer strong { color: #93c5fd; }
+    body.dark .footer a { color: #60a5fa; }
+
+    body.dark .dark-toggle { background: rgba(255,255,255,.1); }
+    body.dark .dark-toggle:hover { background: rgba(255,255,255,.18); }
+
     /* ── FOOTER ───────────────────────────────────────── */
     .footer {
       text-align: center;
@@ -419,8 +663,16 @@
 </head>
 <body>
 
+<button class="dark-toggle" id="dark-toggle" onclick="toggleDark()" title="Toggle dark mode">🌙</button>
+
 <!-- ══ HERO ══════════════════════════════════════════ -->
-<div class="hero">
+<div class="hero" id="hero">
+  <!-- Floating footballs -->
+  <span class="hero-football" style="--fb-size:5rem;--fb-opacity:.07;--fb-top:8%;--fb-left:4%;--fb-dur:6s;--fb-delay:0s;--fb-rot-a:-25deg;--fb-rot-b:10deg;">🏈</span>
+  <span class="hero-football" style="--fb-size:2.8rem;--fb-opacity:.1;--fb-top:18%;--fb-left:80%;--fb-dur:4.5s;--fb-delay:.8s;--fb-rot-a:15deg;--fb-rot-b:-20deg;">🏈</span>
+  <span class="hero-football" style="--fb-size:7rem;--fb-opacity:.05;--fb-top:50%;--fb-left:70%;--fb-dur:7s;--fb-delay:.3s;--fb-rot-a:-10deg;--fb-rot-b:25deg;">🏈</span>
+  <span class="hero-football" style="--fb-size:3.5rem;--fb-opacity:.08;--fb-top:65%;--fb-left:10%;--fb-dur:5.5s;--fb-delay:1.2s;--fb-rot-a:20deg;--fb-rot-b:-15deg;">🏈</span>
+  <span class="hero-football" style="--fb-size:2rem;--fb-opacity:.11;--fb-top:5%;--fb-left:50%;--fb-dur:4s;--fb-delay:.5s;--fb-rot-a:-30deg;--fb-rot-b:5deg;">🏈</span>
   <div class="hero-bear"><img src="Clean_Logo.png" alt="Golden Bears" /></div>
   <h1>2026</h1>
   <div class="hero-sub">5th and 6th Grade Reserve</div>
@@ -442,6 +694,29 @@
        TAB: UPDATES / NEWS
   ════════════════════════════ -->
   <div id="tab-news" class="tab-content active">
+
+    <!-- ── NEXT GAME COUNTDOWN ── -->
+    <div class="countdown-card" id="countdown-card">
+      <!-- Floating cheer text -->
+      <span class="cd-cheer" style="--ct-size:1.5rem;--ct-opacity:.08;--ct-top:10%;--ct-left:3%;--ct-dur:6s;--ct-delay:0s;--ct-rot-a:-8deg;--ct-rot-b:4deg;">Beat the Rams!</span>
+      <span class="cd-cheer" style="--ct-size:1rem;--ct-opacity:.06;--ct-top:55%;--ct-left:58%;--ct-dur:5s;--ct-delay:.9s;--ct-rot-a:5deg;--ct-rot-b:-6deg;">Beat the Rams!</span>
+      <span class="cd-cheer" style="--ct-size:1.2rem;--ct-opacity:.07;--ct-top:75%;--ct-left:5%;--ct-dur:7s;--ct-delay:.4s;--ct-rot-a:-4deg;--ct-rot-b:8deg;">Beat the Rams!</span>
+      <div class="cd-next-label">⏱ Next Game</div>
+      <span class="cd-vs">vs Jr. Rams</span>
+      <div class="cd-meta">
+        Aug 15 &nbsp;·&nbsp; Badin HS &nbsp;·&nbsp; 11:00 AM &nbsp;·&nbsp; <span class="badge badge-away" style="font-size:.68rem;">AWAY</span>
+      </div>
+      <div class="countdown-grid" id="cd-grid">
+        <div class="countdown-unit"><span class="cd-num" id="cd-days">--</span><span class="cd-unit-label">Days</span></div>
+        <div class="countdown-sep">:</div>
+        <div class="countdown-unit"><span class="cd-num" id="cd-hours">--</span><span class="cd-unit-label">Hrs</span></div>
+        <div class="countdown-sep">:</div>
+        <div class="countdown-unit"><span class="cd-num" id="cd-mins">--</span><span class="cd-unit-label">Min</span></div>
+        <div class="countdown-sep">:</div>
+        <div class="countdown-unit"><span class="cd-num" id="cd-secs">--</span><span class="cd-unit-label">Sec</span></div>
+      </div>
+      <div class="cd-arrive">📍 Arrive 10:15 AM &nbsp;·&nbsp; 571 Hamilton New London Rd, Hamilton OH</div>
+    </div>
 
     <div class="section-title">📣 Season Updates</div>
     <p style="font-size:.85rem;color:var(--gray);margin-bottom:1rem;">
@@ -504,16 +779,23 @@
       </thead>
       <tbody>
         <!-- ADD / UPDATE GAME ROWS HERE -->
-        <!-- Example A-Game row: -->
+        <!-- Scrimmage 1 — Aug 15 @ Badin -->
         <tr class="away-row">
-          <td><span class="game-date">Aug TBD</span><br><span class="game-time">Scrimmage</span><br><span class="badge badge-scrimmage">Scrimmage</span></td>
+          <td><span class="game-date">Aug 15</span><br><span class="game-time">11:00 AM – 12:00 PM</span><br><span class="badge badge-scrimmage">Scrimmage</span></td>
           <td><span class="badge badge-agame">A-Game</span></td>
-          <td>TBD</td>
-          <td>TBD</td>
+          <td>Arrive: <strong>10:15 AM</strong><br><span class="game-time">Kickoff: 11:00 AM</span></td>
+          <td>Jr. Rams<br><span class="game-venue">Badin HS</span></td>
           <td><span class="badge badge-away">AWAY</span></td>
-          <td class="game-venue">TBD</td>
+          <td class="game-venue">
+            Badin High School<br>571 Hamilton New London Rd<br>Hamilton, OH 45013
+            <br><a href="https://www.google.com/maps/dir/?api=1&destination=571+Hamilton+New+London+Rd+Hamilton+OH+45013" target="_blank">📍 Get Directions</a>
+            <div class="cal-btns">
+              <button onclick="calGoogle('Golden Bears vs Jr. Rams (Scrimmage)','20260815T110000','20260815T120000','Badin High School, 571 Hamilton New London Rd, Hamilton, OH 45013','Golden Bears 5th/6th Grade Reserve Scrimmage. Arrive by 10:15 AM.')" class="cal-btn cal-btn-google">📅 Google</button>
+              <button onclick="calApple('Golden Bears vs Jr. Rams (Scrimmage)','20260815T110000','20260815T120000','Badin High School, 571 Hamilton New London Rd, Hamilton, OH 45013','Golden Bears 5th/6th Grade Reserve Scrimmage. Arrive by 10:15 AM.')" class="cal-btn cal-btn-apple">🍎 iCal</button>
+            </div>
+          </td>
         </tr>
-        <!-- Example B-Game row: -->
+        <!-- Scrimmage 2 — TBD -->
         <tr class="away-row">
           <td><span class="game-date">Aug TBD</span><br><span class="game-time">Scrimmage</span><br><span class="badge badge-scrimmage">Scrimmage</span></td>
           <td><span class="badge badge-bgame">B-Game</span></td>
@@ -553,11 +835,18 @@
     <div class="schedule-cards">
 
       <div class="game-card">
-        <div class="game-card-top away"><strong>Aug TBD</strong> &nbsp;<span class="badge badge-scrimmage">Scrimmage</span>&nbsp;<span class="badge badge-agame">A-Game</span>&nbsp;<span class="badge badge-away">AWAY</span></div>
+        <div class="game-card-top away"><strong>Aug 15</strong> &nbsp;<span class="badge badge-scrimmage">Scrimmage</span>&nbsp;<span class="badge badge-agame">A-Game</span>&nbsp;<span class="badge badge-away">AWAY</span></div>
         <div class="game-card-body">
-          <div class="row"><span class="lbl">Opponent</span> TBD</div>
-          <div class="row"><span class="lbl">Arrival</span> TBD</div>
-          <div class="row"><span class="lbl">Location</span> TBD</div>
+          <div class="row"><span class="lbl">Opponent</span> Jr. Rams (Badin HS)</div>
+          <div class="row"><span class="lbl">Arrival</span> 10:15 AM &nbsp;·&nbsp; Kickoff 11:00 AM</div>
+          <div class="row"><span class="lbl">Location</span> Badin High School, 571 Hamilton New London Rd, Hamilton OH &nbsp;<a href="https://www.google.com/maps/dir/?api=1&destination=571+Hamilton+New+London+Rd+Hamilton+OH+45013" target="_blank">📍 Directions</a></div>
+          <div class="row">
+            <span class="lbl">Add to</span>
+            <div class="cal-btns" style="margin-top:0;">
+              <button onclick="calGoogle('Golden Bears vs Jr. Rams (Scrimmage)','20260815T110000','20260815T120000','Badin High School, 571 Hamilton New London Rd, Hamilton, OH 45013','Golden Bears 5th/6th Grade Reserve Scrimmage. Arrive by 10:15 AM.')" class="cal-btn cal-btn-google">📅 Google</button>
+              <button onclick="calApple('Golden Bears vs Jr. Rams (Scrimmage)','20260815T110000','20260815T120000','Badin High School, 571 Hamilton New London Rd, Hamilton, OH 45013','Golden Bears 5th/6th Grade Reserve Scrimmage. Arrive by 10:15 AM.')" class="cal-btn cal-btn-apple">🍎 iCal</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -765,6 +1054,23 @@
 </div>
 
 <script>
+  /* ── DARK MODE ── */
+  function toggleDark() {
+    const isDark = document.body.classList.toggle('dark');
+    document.getElementById('dark-toggle').textContent = isDark ? '☀️' : '🌙';
+    localStorage.setItem('gb-dark', isDark ? '1' : '0');
+  }
+  // Restore saved preference
+  (function() {
+    if (localStorage.getItem('gb-dark') === '1') {
+      document.body.classList.add('dark');
+      document.addEventListener('DOMContentLoaded', () => {
+        const btn = document.getElementById('dark-toggle');
+        if (btn) btn.textContent = '☀️';
+      });
+    }
+  })();
+
   function showTab(name, btn) {
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -814,10 +1120,99 @@
     targets.forEach(el => obs.observe(el));
   }
 
+  /* ── CALENDAR HELPERS ── */
+  function calGoogle(title, dateStart, dateEnd, loc, desc) {
+    const url = 'https://calendar.google.com/calendar/render?action=TEMPLATE'
+      + '&text='    + encodeURIComponent(title)
+      + '&dates='   + dateStart + '/' + dateEnd
+      + '&location='+ encodeURIComponent(loc)
+      + '&details=' + encodeURIComponent(desc);
+    window.open(url, '_blank');
+  }
+
+  function calApple(title, dateStart, dateEnd, loc, desc) {
+    const esc = s => s.replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Golden Bears Newsletter//EN',
+      'BEGIN:VEVENT',
+      'DTSTART:' + dateStart,
+      'DTEND:'   + dateEnd,
+      'SUMMARY:' + esc(title),
+      'LOCATION:' + esc(loc),
+      'DESCRIPTION:' + esc(desc),
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\r\n');
+    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = title.replace(/[^a-z0-9]/gi, '-') + '.ics';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  /* ── COUNTDOWN TIMER ──
+     To update: change NEXT_GAME_DATE and the label/meta/arrive text in the HTML above.
+  ── */
+  const NEXT_GAME_DATE = new Date('2026-08-15T11:00:00'); // local time
+
+  function startCountdown() {
+    const cdDays  = document.getElementById('cd-days');
+    const cdHours = document.getElementById('cd-hours');
+    const cdMins  = document.getElementById('cd-mins');
+    const cdSecs  = document.getElementById('cd-secs');
+    const cdGrid  = document.getElementById('cd-grid');
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+
+    function tick() {
+      const diff = NEXT_GAME_DATE - new Date();
+      if (diff <= 0) {
+        cdGrid.innerHTML = '<div class="countdown-done">🏈 GAME DAY! GO BEARS! 🏈</div>';
+        return;
+      }
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
+      const m = Math.floor((diff % 3600000)  / 60000);
+      const s = Math.floor((diff % 60000)    / 1000);
+      if (cdDays)  cdDays.textContent  = d;
+      if (cdHours) cdHours.textContent = pad(h);
+      if (cdMins)  cdMins.textContent  = pad(m);
+      if (cdSecs)  cdSecs.textContent  = pad(s);
+    }
+
+    tick();
+    setInterval(tick, 1000);
+  }
+
+  /* ── PARALLAX HERO ── */
+  function initParallax() {
+    const hero = document.getElementById('hero');
+    if (!hero) return;
+    window.addEventListener('scroll', () => {
+      const y = window.scrollY;
+      if (y < hero.offsetHeight + 80) {
+        // Shift background at 35% scroll speed for depth
+        hero.style.backgroundPositionY = (y * 0.35) + 'px';
+        // Drift footballs at slightly different rates for layered depth
+        hero.querySelectorAll('.hero-football').forEach((fb, i) => {
+          const rate = 0.12 + i * 0.06;
+          fb.style.transform = fb.style.transform.includes('translateY') ? fb.style.transform : '';
+          fb.style.marginTop = (y * rate) + 'px';
+        });
+      }
+    }, { passive: true });
+  }
+
   /* ── KICK IT OFF ── */
   window.addEventListener('DOMContentLoaded', () => {
     launchConfetti();
     initScrollFade();
+    startCountdown();
+    initParallax();
   });
 </script>
 </body>
