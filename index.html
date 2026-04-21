@@ -431,6 +431,27 @@
       animation: tabSlideUp .35s cubic-bezier(.25,.8,.25,1) both;
     }
 
+    /* ── KICKOFF WEATHER WIDGET ─────────────────────── */
+    .cd-weather {
+      position: absolute;
+      top: .7rem;
+      left: .85rem;
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      background: rgba(255,255,255,.13);
+      border-radius: 8px;
+      padding: .3rem .65rem .3rem .5rem;
+      backdrop-filter: blur(4px);
+      z-index: 1;
+      text-align: left;
+    }
+    .cd-weather-icon { font-size: 1.5rem; line-height: 1; }
+    .cd-weather-details { display: flex; flex-direction: column; line-height: 1.25; }
+    .cd-weather-temp { font-size: .9rem; font-weight: 800; color: var(--gold-bright); }
+    .cd-weather-desc { font-size: .62rem; opacity: .78; text-transform: uppercase; letter-spacing: .06em; }
+    .cd-weather-label { font-size: .56rem; opacity: .5; text-transform: uppercase; letter-spacing: .07em; margin-bottom: .05rem; }
+
     /* ── COUNTDOWN CARD ──────────────────────────────── */
     .countdown-card {
       background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #1d4ed8 100%);
@@ -697,6 +718,16 @@
 
     <!-- ── NEXT GAME COUNTDOWN ── -->
     <div class="countdown-card" id="countdown-card">
+      <!-- Kickoff weather widget -->
+      <div class="cd-weather" id="cd-weather">
+        <span class="cd-weather-icon" id="cd-weather-icon">⏳</span>
+        <div class="cd-weather-details">
+          <span class="cd-weather-label">Kickoff Forecast</span>
+          <span class="cd-weather-temp" id="cd-weather-temp">--°F</span>
+          <span class="cd-weather-desc" id="cd-weather-desc">Loading…</span>
+        </div>
+      </div>
+
       <!-- Floating cheer text -->
       <span class="cd-cheer" style="--ct-size:1.5rem;--ct-opacity:.08;--ct-top:10%;--ct-left:3%;--ct-dur:6s;--ct-delay:0s;--ct-rot-a:-8deg;--ct-rot-b:4deg;">Beat the Rams!</span>
       <span class="cd-cheer" style="--ct-size:1rem;--ct-opacity:.06;--ct-top:55%;--ct-left:58%;--ct-dur:5s;--ct-delay:.9s;--ct-rot-a:5deg;--ct-rot-b:-6deg;">Beat the Rams!</span>
@@ -704,7 +735,7 @@
       <div class="cd-next-label">⏱ Next Game</div>
       <span class="cd-vs">vs Jr. Rams</span>
       <div class="cd-meta">
-        Aug 15 &nbsp;·&nbsp; Badin HS &nbsp;·&nbsp; 11:00 AM &nbsp;·&nbsp; <span class="badge badge-away" style="font-size:.68rem;">AWAY</span>
+        Apr 27 &nbsp;·&nbsp; Badin HS &nbsp;·&nbsp; 11:00 AM &nbsp;·&nbsp; <span class="badge badge-away" style="font-size:.68rem;">AWAY</span>
       </div>
       <div class="countdown-grid" id="cd-grid">
         <div class="countdown-unit"><span class="cd-num" id="cd-days">--</span><span class="cd-unit-label">Days</span></div>
@@ -1159,7 +1190,7 @@
   /* ── COUNTDOWN TIMER ──
      To update: change NEXT_GAME_DATE and the label/meta/arrive text in the HTML above.
   ── */
-  const NEXT_GAME_DATE = new Date('2026-08-15T11:00:00'); // local time
+  const NEXT_GAME_DATE = new Date('2026-04-27T11:00:00'); // local time
 
   function startCountdown() {
     const cdDays  = document.getElementById('cd-days');
@@ -1209,12 +1240,64 @@
     }, { passive: true });
   }
 
+  /* ── KICKOFF WEATHER ──
+     Fetches hourly forecast from Open-Meteo (free, no API key).
+     To update: change WEATHER_GAME_DATE and WEATHER_GAME_HOUR below.
+  ── */
+  const WEATHER_GAME_DATE = '2026-04-27';
+  const WEATHER_GAME_HOUR = 11; // 11 AM local kickoff
+  const WEATHER_LAT  = 39.4005;  // Badin HS, Hamilton OH
+  const WEATHER_LON  = -84.5683;
+
+  function weatherCodeInfo(code) {
+    if (code === 0)                          return { icon: '☀️',  desc: 'Clear' };
+    if (code === 1)                          return { icon: '🌤️', desc: 'Mostly Clear' };
+    if (code === 2)                          return { icon: '⛅',  desc: 'Partly Cloudy' };
+    if (code === 3)                          return { icon: '☁️',  desc: 'Overcast' };
+    if (code === 45 || code === 48)          return { icon: '🌫️', desc: 'Foggy' };
+    if (code >= 51 && code <= 55)            return { icon: '🌦️', desc: 'Light Drizzle' };
+    if (code >= 61 && code <= 65)            return { icon: '🌧️', desc: 'Rain' };
+    if (code >= 71 && code <= 77)            return { icon: '❄️',  desc: 'Snow' };
+    if (code >= 80 && code <= 82)            return { icon: '🌧️', desc: 'Rain Showers' };
+    if (code === 95 || code === 96 || code === 99) return { icon: '⛈️', desc: 'Thunderstorm' };
+    return { icon: '🌡️', desc: 'Check Forecast' };
+  }
+
+  async function fetchKickoffWeather() {
+    const iconEl = document.getElementById('cd-weather-icon');
+    const tempEl = document.getElementById('cd-weather-temp');
+    const descEl = document.getElementById('cd-weather-desc');
+    if (!iconEl || !tempEl || !descEl) return;
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LAT}&longitude=${WEATHER_LON}`
+        + `&hourly=temperature_2m,weathercode`
+        + `&temperature_unit=fahrenheit`
+        + `&timezone=America%2FNew_York`
+        + `&start_date=${WEATHER_GAME_DATE}&end_date=${WEATHER_GAME_DATE}`;
+      const res  = await fetch(url);
+      const data = await res.json();
+      const hourStr = `${WEATHER_GAME_DATE}T${String(WEATHER_GAME_HOUR).padStart(2,'0')}:00`;
+      const idx = (data.hourly && data.hourly.time) ? data.hourly.time.indexOf(hourStr) : -1;
+      if (idx === -1) { descEl.textContent = 'N/A'; iconEl.textContent = '🌡️'; return; }
+      const temp = Math.round(data.hourly.temperature_2m[idx]);
+      const info = weatherCodeInfo(data.hourly.weathercode[idx]);
+      iconEl.textContent = info.icon;
+      tempEl.textContent = temp + '°F';
+      descEl.textContent = info.desc;
+    } catch(e) {
+      iconEl.textContent = '🌡️';
+      tempEl.textContent = '';
+      descEl.textContent = 'Unavailable';
+    }
+  }
+
   /* ── KICK IT OFF ── */
   window.addEventListener('DOMContentLoaded', () => {
     launchConfetti();
     initScrollFade();
     startCountdown();
     initParallax();
+    fetchKickoffWeather();
   });
 </script>
 </body>
