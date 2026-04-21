@@ -432,23 +432,24 @@
     }
 
     /* ── KICKOFF WEATHER WIDGET ─────────────────────── */
-    .cd-weather {
-      position: absolute;
-      top: .7rem;
-      left: .85rem;
+    .cd-weather-wrap {
       display: flex;
+      justify-content: center;
+      margin: -.2rem 0 .7rem;
+    }
+    .cd-weather {
+      display: inline-flex;
       align-items: center;
-      gap: .4rem;
+      gap: .45rem;
       background: rgba(255,255,255,.13);
       border-radius: 8px;
-      padding: .3rem .65rem .3rem .5rem;
+      padding: .32rem .75rem .32rem .55rem;
       backdrop-filter: blur(4px);
-      z-index: 1;
       text-align: left;
     }
-    .cd-weather-icon { font-size: 1.5rem; line-height: 1; }
+    .cd-weather-icon { font-size: 1.4rem; line-height: 1; }
     .cd-weather-details { display: flex; flex-direction: column; line-height: 1.25; }
-    .cd-weather-temp { font-size: .9rem; font-weight: 800; color: var(--gold-bright); }
+    .cd-weather-temp { font-size: .88rem; font-weight: 800; color: var(--gold-bright); }
     .cd-weather-desc { font-size: .62rem; opacity: .78; text-transform: uppercase; letter-spacing: .06em; }
     .cd-weather-label { font-size: .56rem; opacity: .5; text-transform: uppercase; letter-spacing: .07em; margin-bottom: .05rem; }
 
@@ -718,16 +719,6 @@
 
     <!-- ── NEXT GAME COUNTDOWN ── -->
     <div class="countdown-card" id="countdown-card">
-      <!-- Kickoff weather widget -->
-      <div class="cd-weather" id="cd-weather">
-        <span class="cd-weather-icon" id="cd-weather-icon">⏳</span>
-        <div class="cd-weather-details">
-          <span class="cd-weather-label">Kickoff Forecast</span>
-          <span class="cd-weather-temp" id="cd-weather-temp">--°F</span>
-          <span class="cd-weather-desc" id="cd-weather-desc">Loading…</span>
-        </div>
-      </div>
-
       <!-- Floating cheer text -->
       <span class="cd-cheer" style="--ct-size:1.5rem;--ct-opacity:.08;--ct-top:10%;--ct-left:3%;--ct-dur:6s;--ct-delay:0s;--ct-rot-a:-8deg;--ct-rot-b:4deg;">Beat the Rams!</span>
       <span class="cd-cheer" style="--ct-size:1rem;--ct-opacity:.06;--ct-top:55%;--ct-left:58%;--ct-dur:5s;--ct-delay:.9s;--ct-rot-a:5deg;--ct-rot-b:-6deg;">Beat the Rams!</span>
@@ -737,6 +728,18 @@
       <div class="cd-meta">
         Apr 27 &nbsp;·&nbsp; Badin HS &nbsp;·&nbsp; 11:00 AM &nbsp;·&nbsp; <span class="badge badge-away" style="font-size:.68rem;">AWAY</span>
       </div>
+      <!-- Kickoff weather widget -->
+      <div class="cd-weather-wrap">
+        <div class="cd-weather" id="cd-weather">
+          <span class="cd-weather-icon" id="cd-weather-icon">⏳</span>
+          <div class="cd-weather-details">
+            <span class="cd-weather-label">Kickoff Forecast</span>
+            <span class="cd-weather-temp" id="cd-weather-temp">--°F</span>
+            <span class="cd-weather-desc" id="cd-weather-desc">Loading…</span>
+          </div>
+        </div>
+      </div>
+
       <div class="countdown-grid" id="cd-grid">
         <div class="countdown-unit"><span class="cd-num" id="cd-days">--</span><span class="cd-unit-label">Days</span></div>
         <div class="countdown-sep">:</div>
