@@ -767,7 +767,7 @@
       <div class="update-body">
         <p>🐻 <strong>Welcome back, Golden Bear families!</strong> We are SO excited to kick off another amazing season with you all!</p>
         <p>This page is going to be your <strong>go-to source</strong> for ALL things Golden Bears throughout the season — weekly updates, the full schedule, important links, volunteer sign-ups, and so much more! Bookmark it, share it, check it often!! 📲</p>
-        <div class="highlight">📘 <strong>Join our Facebook page!!</strong> We have a dedicated Facebook page just for the Golden Bear Reserve Team — it's the best place to stay connected with other families, get real-time updates, and share in all the fun! <a href="#">Join the group here</a> (link coming soon!). Can't wait to see you there!! 🐻🙌</div>
+        <div class="highlight">📘 <strong>Join our Facebook page!!</strong> We have a dedicated Facebook page just for the Golden Bear Reserve Team — it's the best place to stay connected with other families, get real-time updates, and share in all the fun! <a href="https://www.facebook.com/share/g/1GaVLoGaNg/?mibextid=wwXIfr" target="_blank">Join the group here</a>. Can't wait to see you there!! 🐻🙌</div>
         <p>📏 <strong>Equipment Sizing is coming up!!</strong> Mark your calendars — sizing is scheduled for <strong>June XX at 5:00 PM</strong>. More details to follow, but make sure you don't miss it!! We'll get those boys geared up and ready to GO!! 🏈</p>
         <div class="highlight">📣 Check back here regularly for the latest news and updates all season long!!</div>
         <p>Questions? Don't ever hesitate to reach out to Katie via text, email, Game Changer, or Facebook — she's always happy to help!! <strong>GO BEARS!! 🏈💙💛</strong></p>
@@ -962,13 +962,13 @@
 
     <div class="section-title">🔗 Quick Links</div>
     <div class="links-grid">
-      <a href="#" class="link-card">
+      <a href="https://www.facebook.com/share/g/1GaVLoGaNg/?mibextid=wwXIfr" target="_blank" class="link-card">
         <span class="link-icon">📘</span>
-        <div><div class="link-label">Facebook Page</div><div class="link-sub">26' Golden Bear Ponies</div></div>
+        <div><div class="link-label">Facebook Page</div><div class="link-sub">26' Golden Bear Reserve</div></div>
       </a>
-      <a href="#" class="link-card">
+      <a href="https://www.instagram.com/goldenbearsfootball_gcyl/" target="_blank" class="link-card">
         <span class="link-icon">📸</span>
-        <div><div class="link-label">Instagram</div><div class="link-sub">Golden Bear Organization</div></div>
+        <div><div class="link-label">Instagram</div><div class="link-sub">@goldenbearsfootball_gcyl</div></div>
       </a>
       <a href="#" class="link-card">
         <span class="link-icon">📋</span>
@@ -986,14 +986,7 @@
         <span class="link-icon">👕</span>
         <div><div class="link-label">Spirit Wear</div><div class="link-sub">Open All Season</div></div>
       </a>
-      <a href="#" class="link-card">
-        <span class="link-icon">📏</span>
-        <div><div class="link-label">T-Shirt Sizes Form</div><div class="link-sub">End of Year</div></div>
-      </a>
-      <a href="#" class="link-card">
-        <span class="link-icon">🌟</span>
-        <div><div class="link-label">Grand Fan Form</div><div class="link-sub">Count &amp; RSVP</div></div>
-      </a>
+
       <a href="#" class="link-card">
         <span class="link-icon">🎉</span>
         <div><div class="link-label">Special Events</div><div class="link-sub">Golden Bear Organization</div></div>
@@ -1193,7 +1186,7 @@
   /* ── COUNTDOWN TIMER ──
      To update: change NEXT_GAME_DATE and the label/meta/arrive text in the HTML above.
   ── */
-  const NEXT_GAME_DATE = new Date('2026-04-27T11:00:00'); // local time
+  const NEXT_GAME_DATE = new Date('2026-05-26T11:00:00'); // local time
 
   function startCountdown() {
     const cdDays  = document.getElementById('cd-days');
@@ -1247,7 +1240,7 @@
      Fetches hourly forecast from Open-Meteo (free, no API key).
      To update: change WEATHER_GAME_DATE and WEATHER_GAME_HOUR below.
   ── */
-  const WEATHER_GAME_DATE = '2026-04-27';
+  const WEATHER_GAME_DATE = '2026-05-26';
   const WEATHER_GAME_HOUR = 11; // 11 AM local kickoff
   const WEATHER_LAT  = 39.4005;  // Badin HS, Hamilton OH
   const WEATHER_LON  = -84.5683;
@@ -1271,6 +1264,18 @@
     const tempEl = document.getElementById('cd-weather-temp');
     const descEl = document.getElementById('cd-weather-desc');
     if (!iconEl || !tempEl || !descEl) return;
+
+    // Check if game is within the 16-day forecast window
+    const today    = new Date(); today.setHours(0,0,0,0);
+    const gameDate = new Date(WEATHER_GAME_DATE + 'T00:00:00');
+    const daysAway = Math.round((gameDate - today) / 86400000);
+    if (daysAway > 16) {
+      iconEl.textContent = '📅';
+      tempEl.textContent = '';
+      descEl.textContent = 'Available closer to game day';
+      return;
+    }
+
     try {
       const url = `https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LAT}&longitude=${WEATHER_LON}`
         + `&hourly=temperature_2m,weathercode`
