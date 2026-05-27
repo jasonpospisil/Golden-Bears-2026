@@ -1299,11 +1299,13 @@
     btn.classList.add('active');
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    // Make sure cards in the newly-shown tab are visible.
-    // (The IntersectionObserver only runs once on page load, so cards
-    //  that were inside a display:none tab can end up stuck at opacity 0.)
+    // Force every card in the newly-shown tab to be visible. We strip the
+    // fade-in classes outright so the cards default to opacity 1 — this
+    // avoids browser animation/observer caching issues that caused cards
+    // to sometimes stay invisible on every-other tab switch.
     activeTab.querySelectorAll('.fade-in-card').forEach(el => {
-      el.classList.add('visible');
+      el.classList.remove('fade-in-card');
+      el.classList.remove('visible');
     });
   }
 
