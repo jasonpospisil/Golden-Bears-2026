@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>2026 Golden Bears – 5th and 6th Grade Reserve</title>
+  <title>2026 Golden Bears: 5th and 6th Grade Reserve</title>
   <style>
     :root {
       --blue:       #1e3a8a;
@@ -301,6 +301,20 @@
     .contact-row { display: flex; align-items: center; gap: .6rem; padding: .5rem 0; border-bottom: 1px solid #f1f5f9; font-size: .9rem; }
     .contact-row:last-child { border-bottom: none; }
     .contact-row .ci { font-size: 1.1rem; }
+
+    /* ── PRACTICE LIST ────────────────────────────────── */
+    .practice-list { display: flex; flex-direction: column; gap: .55rem; margin-top: .65rem; }
+    .practice-item {
+      padding: .65rem .85rem;
+      background: var(--blue-light);
+      border-radius: 8px;
+      border-left: 3px solid var(--blue);
+    }
+    .practice-item.phase-2 { background: var(--gold-light); border-left-color: var(--gold); }
+    .practice-item.phase-3 { background: #fce7f3; border-left-color: #ec4899; }
+    .practice-date { font-weight: 700; color: var(--dark); font-size: .92rem; }
+    .practice-time { color: var(--gray); font-weight: 600; font-size: .82rem; margin-left: .35rem; }
+    .practice-attire { font-size: .82rem; color: #475569; margin-top: .25rem; line-height: 1.5; }
 
     /* ── EXPECTATIONS ─────────────────────────────────── */
     .expect-item {
@@ -643,6 +657,13 @@
 
     body.dark .expect-item { color: #cbd5e1; border-bottom-color: #334155; }
 
+    body.dark .practice-item { background: rgba(59,130,246,.12); border-left-color: #60a5fa; }
+    body.dark .practice-item.phase-2 { background: rgba(245,158,11,.12); border-left-color: var(--gold); }
+    body.dark .practice-item.phase-3 { background: rgba(236,72,153,.12); border-left-color: #ec4899; }
+    body.dark .practice-date { color: #e2e8f0; }
+    body.dark .practice-time { color: #94a3b8; }
+    body.dark .practice-attire { color: #cbd5e1; }
+
     body.dark .event-body h4 { color: #e2e8f0; }
     body.dark .event-body p { color: #94a3b8; }
     body.dark .event-body .event-date { color: var(--gold-bright); }
@@ -757,9 +778,9 @@
       <div class="event-card">
         <div class="event-stripe gold"></div>
         <div class="event-body">
-          <div class="event-date">June 8 – 11 · 6:00 – 8:00 PM</div>
-          <h4>📏 Equipment Fitting</h4>
-          <p>Time to get our boys sized up and ready for the season!! Drop in any evening that works for your family between <strong>June 8th – 11th, 6:00 – 8:00 PM</strong>. <strong>Location: Mother Teresa</strong>. Don't miss it — let's GO BEARS!! 🐻💙💛</p>
+          <div class="event-date">June 8 to 11 · 6:00 to 8:00 PM</div>
+          <h4>📏 Equipment Fitting (Reserve Team)</h4>
+          <p>Time to get our Reserve Team boys sized up and ready for the season!! Fitting is happening <strong>June 8th to 11th, 6:00 to 8:00 PM</strong> at <strong>Mother Teresa</strong>. Don't miss it!! Let's GO BEARS!! 🐻💙💛</p>
         </div>
       </div>
     </div>
@@ -778,13 +799,13 @@
       </div>
       <div class="update-body">
         <p>🐻 <strong>Welcome back, Golden Bear families!</strong> We are SO excited to kick off another amazing season with you all!</p>
-        <p>This page is going to be your <strong>go-to source</strong> for ALL things Golden Bears throughout the season — weekly updates, the full schedule, important links, volunteer sign-ups, and so much more! Bookmark it, share it, check it often!! 📲</p>
-        <div class="highlight">📘 <strong>Join our Facebook page!!</strong> We have a dedicated Facebook page just for the Golden Bear Reserve Team — it's the best place to stay connected with other families, get real-time updates, and share in all the fun! <a href="https://www.facebook.com/share/g/1GaVLoGaNg/?mibextid=wwXIfr" target="_blank">Join the group here</a>. Can't wait to see you there!! 🐻🙌</div>
-        <p>📏 <strong>Equipment Fitting is HERE, Bear families!!</strong> Mark those calendars — fitting is happening <strong>June 8th – 11th from 6:00 – 8:00 PM at Mother Teresa</strong>!! 🙌 Stop by ANY evening that works best for your family and we'll get our boys all geared up and ready to GO!! Can't wait to see everyone!! 🏈🐻💙💛</p>
-        <p>🎉 <strong>GOLDEN BEAR FEST is coming!!</strong> 🐻🎊 Get ready for one of our BIGGEST nights of the year — and bonus: our <strong>Parent &amp; Coordinator Informational Session</strong> will be happening that <em>same night</em>!! 🙌 Two-for-one — celebrate AND get all the season info in one stop!! Date and time will be shared as soon as they're locked in — keep an eye right here and on our Facebook group so you don't miss it!! 🐻💙💛</p>
-        <p>🎥 <strong>VOLUNTEER ASK — Videographer needed!!</strong> We are looking for someone to be our team videographer for the season!! 📸 If you've got a knack for capturing the action and want to help us preserve all the AMAZING memories our boys are about to make, please reach out to <strong>Coach Wietmarschen</strong>!! What a FUN way to be part of the team!! 🏈🐻</p>
+        <p>This page is going to be your <strong>go-to source</strong> for ALL things Golden Bears throughout the season!! You'll find weekly updates, the full schedule, important links, volunteer sign-ups, and so much more!! Bookmark it, share it, check it often!! 📲</p>
+        <div class="highlight">📘 <strong>Join our Facebook page!!</strong> We have a dedicated Facebook page just for the Golden Bear Reserve Team. It's the best place to stay connected with other families, get real-time updates, and share in all the fun! <a href="https://www.facebook.com/share/g/1GaVLoGaNg/?mibextid=wwXIfr" target="_blank">Join the group here</a>. Can't wait to see you there!! 🐻🙌</div>
+        <p>📏 <strong>Reserve Team Equipment Fitting is HERE, Bear families!!</strong> Mark those calendars!! Fitting is happening <strong>June 8th to 11th from 6:00 to 8:00 PM at Mother Teresa</strong>!! 🙌 We'll get our boys all geared up and ready to GO!! Can't wait to see everyone!! 🏈🐻💙💛</p>
+        <p>🎉 <strong>GOLDEN BEAR FEST is coming!!</strong> 🐻🎊 Our <strong>Parent &amp; Coordinator Informational Session</strong> will be happening that <em>same night</em>!! 🙌 Two for one!! Celebrate AND get all the season info in one stop!! Date and time will be shared as soon as they're locked in, so keep an eye right here, on Game Changer, and on our Facebook group so you don't miss it!! 🐻💙💛</p>
+        <p>🎥 <strong>VOLUNTEER ASK: Videographer needed!!</strong> We are looking for someone to be our team videographer for the season!! 📸 If you've got a knack for capturing the action and want to help us preserve all the AMAZING memories our boys are about to make, please reach out to <strong>Coach Wietmarschen</strong>!! What a FUN way to be part of the team!! 🏈🐻</p>
         <div class="highlight">📣 Check back here regularly for the latest news and updates all season long!!</div>
-        <p>Questions? Don't ever hesitate to reach out to Katie via text, email, Game Changer, or Facebook — she's always happy to help!! <strong>GO BEARS!! 🏈💙💛</strong></p>
+        <p>Questions? Don't ever hesitate to reach out to Katie via text, email, Game Changer, or Facebook!! She's always happy to help!! <strong>GO BEARS!! 🏈💙💛</strong></p>
       </div>
     </div>
 
@@ -811,7 +832,7 @@
 
     <div class="section-title">📅 2026 Season Schedule</div>
     <p style="font-size:.82rem;color:var(--gray);margin-bottom:1rem;">
-      ** Subject to change — check Game Changer regularly. **All home games require volunteers.**
+      ** Subject to change. Check Game Changer regularly. **All home games require volunteers.**
       <span class="badge badge-home">HOME</span> games highlighted in gold.
     </p>
 
@@ -1123,7 +1144,7 @@
         <div class="event-body">
           <div class="event-date">Date TBD · HOME</div>
           <h4>💙💛 Blue/Gold Weekend</h4>
-          <p>First HOME game of the season! Show off all the BLUE/GOLD (YELLOW), and WHITE!! Wear all the team colors you can — no such thing as too much!</p>
+          <p>First HOME game of the season! Show off all the BLUE/GOLD (YELLOW), and WHITE!! Wear all the team colors you can. No such thing as too much!</p>
         </div>
       </div>
       <div class="event-card">
@@ -1142,6 +1163,41 @@
           <p>Boys show their support of those affected by breast cancer. Boys are able to wear pink accessories with their uniform (wearing pink is NOT REQUIRED). Pink accessories: Gloves · Socks · Mouth guard · Arm sleeves · Sweat Band</p>
         </div>
       </div>
+    </div>
+
+    <!-- Practice Schedule -->
+    <div class="section-title">🏃 Practice Schedule</div>
+    <div class="info-card">
+      <h3>Preseason Conditioning &amp; Acclimation</h3>
+      <p>These sessions are <strong>not mandatory but highly encouraged</strong>!! Let's get our boys ready to GO!! 💪🐻 All practices at <strong>Mother Teresa (MTCES)</strong>.</p>
+
+      <div class="practice-list">
+        <div class="practice-item">
+          <div class="practice-date">Tue, July 14 <span class="practice-time">6:00 to 8:00 PM</span></div>
+          <div class="practice-attire">👕 Gym shorts, t-shirt, cleats, helmet</div>
+        </div>
+        <div class="practice-item">
+          <div class="practice-date">Thu, July 16 <span class="practice-time">6:00 to 8:00 PM</span></div>
+          <div class="practice-attire">👕 Gym shorts, t-shirt, cleats, helmet</div>
+        </div>
+        <div class="practice-item phase-2">
+          <div class="practice-date">Tue, July 21 <span class="practice-time">6:00 to 8:00 PM</span></div>
+          <div class="practice-attire">🛡️ Gym shorts, t-shirt, cleats, helmet, shoulder pads</div>
+        </div>
+        <div class="practice-item phase-2">
+          <div class="practice-date">Thu, July 23 <span class="practice-time">6:00 to 8:00 PM</span></div>
+          <div class="practice-attire">🛡️ Gym shorts, t-shirt, cleats, helmet, shoulder pads</div>
+        </div>
+        <div class="practice-item phase-3">
+          <div class="practice-date">Sat, July 25 <span class="practice-time">10:00 AM to 12:00 PM</span></div>
+          <div class="practice-attire">🏈 Full gear</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-card">
+      <h3>Regular Practice Schedule</h3>
+      <p>Regular practice kicks off <strong>Tuesday, July 28</strong>!! 🏈 From there, we'll be on the field every <strong>Tuesday, Wednesday, and Thursday</strong> from <strong>6:00 to 8:00 PM</strong> at <strong>Mother Teresa (MTCES)</strong>. Let's GO BEARS!! 🐻💙💛</p>
     </div>
 
   </div><!-- /tab-schedule -->
@@ -1209,7 +1265,7 @@
     <!-- Contact -->
     <div class="section-title">📞 Contact</div>
     <div class="info-card">
-      <h3>Team Mom — Kathryn Pospisil</h3>
+      <h3>Team Mom: Kathryn Pospisil</h3>
       <div class="contact-row"><span class="ci">📱</span><a href="tel:5133486881">513-348-6881</a></div>
       <div class="contact-row"><span class="ci">📧</span><a href="mailto:kathrynpospisil@gmail.com">kathrynpospisil@gmail.com</a></div>
       <div class="contact-row"><span class="ci">💸</span>Venmo: <strong>@katie-pospisil-1</strong> (contributions &amp; Grand Fan fund)</div>
@@ -1222,7 +1278,7 @@
     <div class="info-card">
       <h3>During the Game</h3>
       <ul>
-        <li><strong>Chain Gang (3)</strong> — Ages 12 and up! **Best view in town!**</li>
+        <li><strong>Chain Gang (3):</strong> Ages 12 and up! **Best view in town!**</li>
         <li><strong>Announcer (1)</strong></li>
         <li><strong>Spotter (1)</strong></li>
         <li><strong>Clock (1)</strong></li>
@@ -1230,10 +1286,10 @@
       <h3 style="margin-top:.85rem;">Before or After the Game</h3>
       <ul>
         <li><strong>Gate (2)</strong></li>
-        <li><strong>Concession (3)</strong> — *adult w/ child is OK*</li>
-        <li><strong>Grill (1)</strong> — *adult w/ child is OK*</li>
+        <li><strong>Concession (3):</strong> *adult w/ child is OK*</li>
+        <li><strong>Grill (1):</strong> *adult w/ child is OK*</li>
       </ul>
-      <p style="margin-top:.75rem;font-size:.83rem;color:var(--gray);">Sign up at the <a href="#">SignUp Genius</a> link. All home games — volunteers needed!</p>
+      <p style="margin-top:.75rem;font-size:.83rem;color:var(--gray);">Sign up at the <a href="#">SignUp Genius</a> link. All home games, volunteers needed!</p>
     </div>
 
   </div><!-- /tab-links -->
@@ -1252,8 +1308,8 @@
     <div class="info-card">
       <h3>For Our Families</h3>
       <div class="expect-item"><span class="star">★</span> Families volunteer during home games.</div>
-      <div class="expect-item"><span class="star">★</span> Be model spectators on the sidelines — no foul language, no yelling at the refs, no coaching your athletes from the sidelines, and no negative interactions with visiting spectators.</div>
-      <div class="expect-item"><span class="star">★</span> Tailgating responsibility — look after our shared space.</div>
+      <div class="expect-item"><span class="star">★</span> Be model spectators on the sidelines. No foul language, no yelling at the refs, no coaching your athletes from the sidelines, and no negative interactions with visiting spectators.</div>
+      <div class="expect-item"><span class="star">★</span> Tailgating responsibility. Look after our shared space.</div>
       <div class="expect-item"><span class="star">★</span> Leaving every space better than we found it.</div>
       <div class="expect-item"><span class="star">★</span> No pets at games. Medical service animals are not included.</div>
       <div class="expect-item"><span class="star">★</span> Being humble winners and losers.</div>
@@ -1261,7 +1317,7 @@
 
     <div class="info-card">
       <h3>🐻 The Golden Bear Way</h3>
-      <p>We are a community first. Cheer loudly for our boys, support every family, and show up with good energy — on the field and off it. <strong>GO BEARS!</strong></p>
+      <p>We are a community first. Cheer loudly for our boys, support every family, and show up with good energy, on the field and off it. <strong>GO BEARS!</strong></p>
     </div>
 
   </div><!-- /tab-expectations -->
