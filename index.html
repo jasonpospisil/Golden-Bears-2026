@@ -702,6 +702,36 @@
     @media (max-width: 400px) {
       .nav-btn { padding: .75rem .55rem; font-size: .78rem; }
     }
+
+    /* ── IMAGE LIGHTBOX ── */
+    #lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(0,0,0,.88);
+      padding: 1.5rem;
+      cursor: zoom-out;
+    }
+    #lightbox.open { display: flex; align-items: center; justify-content: center; }
+    #lightbox img {
+      max-width: 100%;
+      max-height: 92vh;
+      width: auto;
+      height: auto;
+      border-radius: 10px;
+      box-shadow: 0 10px 40px rgba(0,0,0,.5);
+    }
+    .lightbox-close {
+      position: fixed;
+      top: 1rem;
+      right: 1.4rem;
+      color: #fff;
+      font-size: 2.5rem;
+      line-height: 1;
+      cursor: pointer;
+      user-select: none;
+    }
   </style>
 </head>
 <body>
@@ -789,8 +819,16 @@
       <div class="update-body">
         <p><strong>Welcome back, Golden Bear families!</strong> We are SO excited to kick off another amazing season with you all!</p>
         <p>📲 This page is going to be your <strong>go-to source</strong> for ALL things Golden Bears throughout the season!! You'll find weekly updates, the full schedule, important links, volunteer sign-ups, and so much more!! Bookmark it, share it, check it often!!</p>
+        <p>✅ <strong>IMPORTANT REMINDER:</strong> Please confirm your athlete's attendance with the <strong>Game Changer RSVP</strong> for EVERY practice and game!! This helps our coaches plan accordingly, so please keep it updated!! Thank you, Bear families!!</p>
         <p>🎉 <strong>GOLDEN BEAR FEST is happening Saturday, August 22 from 10:00 AM to 12:30 PM!!</strong> Right after our Blue vs Gold scrimmage that morning, so make a day of it!! Our <strong>Parent &amp; Coordinator Informational Session</strong> will be happening that <em>same day</em>!! Two for one!! Celebrate AND get all the season info in one stop!! Mark your calendars and we'll see you there!!</p>
         <p>🎥 <strong>VOLUNTEER ASK: Videographer needed!!</strong> We are looking for someone to be our team videographer for the season!! If you've got a knack for capturing the action and want to help us preserve all the AMAZING memories our boys are about to make, please reach out to <strong>Coach Wietmarschen</strong>!! What a FUN way to be part of the team!!</p>
+        <p>👕 <strong>THE SPIRIT WEAR STORE IS UP!!</strong> Grab your Golden Bear gear and rep the team all season long!! <a href="https://www.storessimple.com/513promo/groupproducts.php?prodgroup_id=32989&prodgroupbypass=true" target="_blank">Shop the store here</a>!! Spirit wear orders will be delivered right to practice!!</p>
+        <p>🧦 <strong>GAME DAY SOCKS:</strong> Our team socks have been ordered!! They'll be delivered right to practice once they arrive AND once paid to Katie (see Venmo details in the Info section). These socks are <strong>required for game day</strong>!! They were already ordered at equipment fittings, so if you need a reminder of what was ordered, reach out to Katie!!</p>
+        <p>👖 <strong>OPTIONAL BELTS:</strong> IYKYK!! If you don't want your boys pulling up their pants as they run for a touchdown, these may be worth it!! Totally optional, but a handy little extra. <a href="https://www.amazon.com/Gelante-Canvas-Silver-Military-2052-Royal/dp/B07DC96W3V/ref=sr_1_7?crid=KSL5BUNI8OTV&dib=eyJ2IjoiMSJ9.wY-V6HhnOTjlk7_1vEXsHkF5oPwpNmUEANp0B_y8t-1mcuNTu65XfokLDeWhgLYjFoj3Q2al4RtdjR93SwUhZyOCPU1SIJskvwmrMucIhPwHeIf6cICctzERHUX08o0pGjSKyUAG2T_-cdh6EHc2sqcY9lTCieQfCQ7QMADCVOsjGky47wnftxr7s_AiesD7P2Dha_0hXVD65EthvNsGzmgMj1KSwh1o1BCQ0qKcRJYyCixaUBLB2-soTjeG0XcJe6GaJlCVn3JnF6750roTP5QmMlJKkiI28zP9aOhM3ow.UIqrhsaQmKu2p43t_rA-d6Ecuc0K5kRD5MMOp1LPwBI&dib_tag=se&keywords=blue+belts+with+D+_Rings&qid=1779810261&sprefix=blue+belts+with+d+_rings,aps,91&sr=8-7&th=1&psc=1" target="_blank">Grab them on Amazon here</a>!!</p>
+        <p>📸 <strong>ROSTER CARDS ARE COMING!!</strong> We're putting together roster cards so everyone can show off their player and follow along with the whole team on game day!! To make it happen, we need parents to <strong>submit photos of your athlete</strong> for their card. Examples will be provided (link coming soon!). Please get your photos in <strong>no later than July 24</strong> so we can get these ready to GO!!</p>
+        <p>📋 <strong>PHOTO GUIDE:</strong> Every player needs one <strong>mandatory pose</strong>, the "Burrow Pose" (see the photo guide below for all the details)!! After that, players can add <strong>additional poses of their choice</strong> if they'd like. Have fun with it!!</p>
+        <img src="Roster Card Photo Example.png" alt="Roster Card Photo Guide: the mandatory Burrow Pose plus additional pose options" onclick="openLightbox(this.src, this.alt)" style="width:180px;max-width:100%;height:auto;border-radius:10px;margin-top:.5rem;display:block;cursor:zoom-in;border:1px solid #e2e8f0;">
+        <p style="font-size:.8rem;color:var(--gray);margin-top:.4rem;">🔍 Tap the photo guide to enlarge!! Use it when taking your athlete's roster card photos!!</p>
         <div class="highlight">📣 Check back here regularly for the latest news and updates all season long!!</div>
         <p>❓ Questions? Don't ever hesitate to reach out to me via text at <a href="tel:5133486881">513.348.6881</a>, email at <a href="mailto:kathrynpospisil@gmail.com">kathrynpospisil@gmail.com</a>, or Game Changer!! I am always happy to help!! <strong>GO BEARS!!</strong> 💛💙🐻🏈🎉</p>
       </div>
@@ -1252,10 +1290,6 @@
         <div><div class="link-label">Instagram</div><div class="link-sub">@goldenbearsfootball_gcyl</div></div>
       </a>
       <a href="#" class="link-card">
-        <span class="link-icon">📋</span>
-        <div><div class="link-label">Full Schedule</div><div class="link-sub">Game Changer</div></div>
-      </a>
-      <a href="#" class="link-card">
         <span class="link-icon">🗺️</span>
         <div><div class="link-label">Home Field Directions</div><div class="link-sub">Bishop Fenwick High School</div></div>
       </a>
@@ -1263,7 +1297,7 @@
         <span class="link-icon">🙋</span>
         <div><div class="link-label">Volunteer Sign Up</div><div class="link-sub">SignUp Genius</div></div>
       </a>
-      <a href="#" class="link-card">
+      <a href="https://www.storessimple.com/513promo/groupproducts.php?prodgroup_id=32989&prodgroupbypass=true" target="_blank" class="link-card">
         <span class="link-icon">👕</span>
         <div><div class="link-label">Spirit Wear</div><div class="link-sub">Open All Season</div></div>
       </a>
@@ -1435,6 +1469,19 @@
   function toggleCard(id) {
     document.getElementById(id).classList.toggle('open');
   }
+
+  /* ── IMAGE LIGHTBOX ── */
+  function openLightbox(src, alt) {
+    const ov = document.getElementById('lightbox');
+    const img = document.getElementById('lightbox-img');
+    img.src = src;
+    img.alt = alt || '';
+    ov.classList.add('open');
+  }
+  function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('open');
+  }
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeLightbox(); });
 
   /* ── CONFETTI on page load ── */
   function launchConfetti() {
@@ -1634,5 +1681,11 @@
     fetchKickoffWeather();
   });
 </script>
+
+<!-- ══ IMAGE LIGHTBOX ══ -->
+<div id="lightbox" onclick="closeLightbox()">
+  <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
+  <img id="lightbox-img" src="" alt="">
+</div>
 </body>
 </html>
