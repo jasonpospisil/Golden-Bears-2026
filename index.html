@@ -1720,10 +1720,29 @@
     fetchKickoffWeather();
   });
 
-  /* ── Register service worker (enables Add to Home Screen) ── */
+  /* ── Register service worker (enables Add to Home Screen + auto-update) ── */
   if ('serviceWorker' in navigator) {
+    // Remember whether a worker was already controlling this page. On the very
+    // first visit there is none, so we skip the initial auto-reload.
+    const hadController = !!navigator.serviceWorker.controller;
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshing || !hadController) return;
+      refreshing = true;
+      window.location.reload(); // a new version took over -> refresh once
+    });
+
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js').catch(() => {});
+      navigator.serviceWorker.register('sw.js').then((reg) => {
+        const checkForUpdate = () => reg.update().catch(() => {});
+        // Check for a new version whenever the app is opened / brought forward
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') checkForUpdate();
+        });
+        window.addEventListener('focus', checkForUpdate);
+        // And a periodic check while it stays open
+        setInterval(checkForUpdate, 30 * 60 * 1000);
+      }).catch(() => {});
     });
   }
 </script>
