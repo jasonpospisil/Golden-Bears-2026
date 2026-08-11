@@ -800,10 +800,10 @@
       <span class="cd-cheer" style="--ct-size:1.5rem;--ct-opacity:.08;--ct-top:10%;--ct-left:3%;--ct-dur:6s;--ct-delay:0s;--ct-rot-a:-8deg;--ct-rot-b:4deg;">Go Bears!</span>
       <span class="cd-cheer" style="--ct-size:1rem;--ct-opacity:.06;--ct-top:55%;--ct-left:58%;--ct-dur:5s;--ct-delay:.9s;--ct-rot-a:5deg;--ct-rot-b:-6deg;">Go Bears!</span>
       <span class="cd-cheer" style="--ct-size:1.2rem;--ct-opacity:.07;--ct-top:75%;--ct-left:5%;--ct-dur:7s;--ct-delay:.4s;--ct-rot-a:-4deg;--ct-rot-b:8deg;">Go Bears!</span>
-      <div class="cd-next-label">⏱ Season Kickoff</div>
-      <span class="cd-vs">Preseason @ Moeller</span>
+      <div class="cd-next-label">⏱ Next Game</div>
+      <span class="cd-vs">Scrimmage vs. St. James (@ Badin)</span>
       <div class="cd-meta">
-        Aug 9 &nbsp;·&nbsp; Moeller HS &nbsp;·&nbsp; 12:00 to 2:30 PM &nbsp;·&nbsp; Arrive 11:00 AM &nbsp;·&nbsp; <span class="badge badge-away" style="font-size:.68rem;">AWAY</span>
+        Aug 16 &nbsp;·&nbsp; Badin HS &nbsp;·&nbsp; 10:30 to 11:30 AM &nbsp;·&nbsp; Arrive 9:30 AM &nbsp;·&nbsp; <span class="badge badge-away" style="font-size:.68rem;">AWAY</span>
       </div>
       <!-- Kickoff weather widget -->
       <div class="cd-weather-wrap">
@@ -826,7 +826,7 @@
         <div class="countdown-sep">:</div>
         <div class="countdown-unit"><span class="cd-num" id="cd-secs">--</span><span class="cd-unit-label">Sec</span></div>
       </div>
-      <div class="cd-arrive">📍 <a href="https://www.google.com/maps/dir/?api=1&destination=9001+Montgomery+Rd+Cincinnati+OH+45242" target="_blank" style="color:var(--gold-bright);text-decoration:underline;">9001 Montgomery Rd, Cincinnati OH (Archbishop Moeller HS)</a></div>
+      <div class="cd-arrive">📍 <a href="https://www.google.com/maps/dir/?api=1&destination=571+Hamilton+New+London+Rd+Hamilton+OH+45013" target="_blank" style="color:var(--gold-bright);text-decoration:underline;">571 Hamilton New London Rd, Hamilton OH (Badin High School)</a></div>
     </div>
 
     <div class="section-title">📣 Season Updates</div>
@@ -1700,7 +1700,7 @@
   ── */
   // Update this when the first preseason game time is confirmed.
   // Currently set to Aug 8, 2026 at noon as a placeholder for the At Moeller weekend.
-  const NEXT_GAME_DATE = new Date('2026-08-09T12:00:00'); // local time
+  const NEXT_GAME_DATE = new Date('2026-08-16T10:30:00'); // local time
 
   function startCountdown() {
     const cdDays  = document.getElementById('cd-days');
@@ -1754,10 +1754,10 @@
      Fetches hourly forecast from Open-Meteo (free, no API key).
      To update: change WEATHER_GAME_DATE and WEATHER_GAME_HOUR below.
   ── */
-  const WEATHER_GAME_DATE = '2026-08-09';
-  const WEATHER_GAME_HOUR = 12; // 12:00 PM kickoff
-  const WEATHER_LAT  = 39.2086;  // Archbishop Moeller HS, Cincinnati OH
-  const WEATHER_LON  = -84.3539;
+  const WEATHER_GAME_DATE = '2026-08-16';
+  const WEATHER_GAME_HOUR = 10; // 10:30 AM kickoff
+  const WEATHER_LAT  = 39.3803;  // Badin HS, Hamilton OH
+  const WEATHER_LON  = -84.5860;
 
   function weatherCodeInfo(code) {
     if (code === 0)                          return { icon: '☀️',  desc: 'Clear' };
