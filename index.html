@@ -1030,9 +1030,9 @@
         <!-- ═══ REGULAR SEASON ═══ -->
         <!-- Week 1 — Aug 29/30 -->
         <tr class="home-row">
-          <td><span class="game-date">Aug 29</span><br><span class="game-time">1:00 to 2:30 PM</span><br><span class="game-time">Week 1</span></td>
+          <td><span class="game-date">Aug 29</span><br><span class="game-time">4:00 to 5:30 PM</span><br><span class="game-time">Week 1</span></td>
           <td><span class="badge badge-agame">Saturday Game</span></td>
-          <td>Arrive 12:00 PM<br><span class="game-time">Kickoff 1:00 PM</span></td>
+          <td>Arrive 3:00 PM<br><span class="game-time">Kickoff 4:00 PM</span></td>
           <td>St. James 6th</td>
           <td><span class="badge badge-home">HOME</span></td>
           <td class="game-venue">
@@ -1243,8 +1243,8 @@
         <div class="game-card-top home"><strong>Aug 29</strong> &nbsp;Week 1&nbsp;<span class="badge badge-agame">Saturday Game</span>&nbsp;<span class="badge badge-home">HOME</span></div>
         <div class="game-card-body">
           <div class="row"><span class="lbl">Opponent</span> St. James 6th</div>
-          <div class="row"><span class="lbl">Arrival</span> 12:00 PM</div>
-          <div class="row"><span class="lbl">Kickoff</span> 1:00 to 2:30 PM</div>
+          <div class="row"><span class="lbl">Arrival</span> 3:00 PM</div>
+          <div class="row"><span class="lbl">Kickoff</span> 4:00 to 5:30 PM</div>
           <div class="row"><span class="lbl">Location</span> Bishop Fenwick HS, 4855 OH-122, Franklin OH 45006 &nbsp;<a href="https://www.google.com/maps/dir/?api=1&destination=4855+OH-122+Franklin+OH+45006" target="_blank">📍 Directions</a></div>
         </div>
       </div>
@@ -1746,12 +1746,76 @@
     document.body.removeChild(a);
   }
 
-  /* ── COUNTDOWN TIMER ──
-     To update: change NEXT_GAME_DATE and the label/meta/arrive text in the HTML above.
-  ── */
-  // Update this when the first preseason game time is confirmed.
-  // Currently set to Aug 8, 2026 at noon as a placeholder for the At Moeller weekend.
-  const NEXT_GAME_DATE = new Date('2026-08-22T11:00:00'); // local time
+  /* ── SEASON GAMES (drives the countdown + weather widget) ──
+     The countdown highlights each game until 4 HOURS AFTER its kickoff, then
+     automatically advances to the next game on the next page load/visit.
+     To add or edit a game, update this list. ── */
+  const GAMES = [
+    { kickoff:'2026-08-22T11:00:00', vs:'Blue vs Gold Scrimmage', date:'Aug 22', venue:'Mother Teresa (MTCES)', time:'11:00 AM to 1:00 PM', arrive:'', ha:'HOME',
+      mapLabel:'7197 Mother Teresa Ln, Liberty Township OH (Mother Teresa MTCES)', mapQuery:'7197+Mother+Teresa+Ln+Liberty+Township+OH+45044', wDate:'2026-08-22', wHour:11, lat:39.3960, lon:-84.4230 },
+    { kickoff:'2026-08-29T16:00:00', vs:'vs St. James 6th', date:'Aug 29', venue:'Bishop Fenwick HS', time:'4:00 to 5:30 PM', arrive:'3:00 PM', ha:'HOME',
+      mapLabel:'4855 OH-122, Franklin OH (Bishop Fenwick HS)', mapQuery:'4855+OH-122+Franklin+OH+45006', wDate:'2026-08-29', wHour:16, lat:39.5449, lon:-84.3179 },
+    { kickoff:'2026-08-31T17:30:00', vs:'@ Jr Rams (Mon)', date:'Aug 31', venue:'Dan Cox Field', time:'5:30 to 7:00 PM', arrive:'TBD', ha:'AWAY',
+      mapLabel:'25 Joe Nuxhall Way, Fairfield OH (Dan Cox Field)', mapQuery:'25+Joe+Nuxhall+Way+Fairfield+OH+45014', wDate:'2026-08-31', wHour:17, lat:39.3466, lon:-84.5602 },
+    { kickoff:'2026-09-05T14:30:00', vs:'@ Cougars 6th', date:'Sep 5', venue:'Summit Country Day', time:'2:30 to 4:00 PM', arrive:'1:30 PM', ha:'AWAY',
+      mapLabel:'2161 Grandin Rd, Cincinnati OH (Summit Country Day)', mapQuery:'2161+Grandin+Rd+Cincinnati+OH+45208', wDate:'2026-09-05', wHour:14, lat:39.1447, lon:-84.4310 },
+    { kickoff:'2026-09-12T15:00:00', vs:'@ Jr Rams 6th', date:'Sep 12', venue:'Joyce Park', time:'3:00 PM', arrive:'2:00 PM', ha:'AWAY',
+      mapLabel:'25 Joe Nuxhall Way, Fairfield OH (Joyce Park)', mapQuery:'25+Joe+Nuxhall+Way+Fairfield+OH+45014', wDate:'2026-09-12', wHour:15, lat:39.3466, lon:-84.5602 },
+    { kickoff:'2026-09-19T11:00:00', vs:'@ St. Ignatius', date:'Sep 19', venue:'St. Ignatius (Field 1)', time:'11:00 AM to 12:30 PM', arrive:'10:00 AM', ha:'AWAY',
+      mapLabel:'5222 North Bend Rd, Cincinnati OH (St. Ignatius)', mapQuery:'5222+North+Bend+Rd+Cincinnati+OH+45247', wDate:'2026-09-19', wHour:11, lat:39.1889, lon:-84.6030 },
+    { kickoff:'2026-09-21T18:00:00', vs:'@ St. Susanna (Mon)', date:'Sep 21', venue:'St. Susanna', time:'6:00 to 8:00 PM', arrive:'TBD', ha:'AWAY',
+      mapLabel:'500 Reading Rd, Mason OH (St. Susanna)', mapQuery:'500+Reading+Rd+Mason+OH+45040', wDate:'2026-09-21', wHour:18, lat:39.3601, lon:-84.3097 },
+    { kickoff:'2026-09-27T16:00:00', vs:'@ SASEAS (Sun)', date:'Sep 27', venue:'Madeira HS', time:'4:00 to 5:30 PM', arrive:'3:00 PM', ha:'AWAY',
+      mapLabel:'7465 Loannes Dr, Cincinnati OH (Madeira HS)', mapQuery:'7465+Loannes+Dr+Cincinnati+OH+45243', wDate:'2026-09-27', wHour:16, lat:39.1900, lon:-84.3730 },
+    { kickoff:'2026-10-03T13:00:00', vs:'vs Guardian Angels', date:'Oct 3', venue:'Bishop Fenwick HS', time:'1:00 to 2:30 PM', arrive:'12:00 PM', ha:'HOME',
+      mapLabel:'4855 OH-122, Franklin OH (Bishop Fenwick HS)', mapQuery:'4855+OH-122+Franklin+OH+45006', wDate:'2026-10-03', wHour:13, lat:39.5449, lon:-84.3179 },
+    { kickoff:'2026-10-05T16:30:00', vs:'@ Silvercats (Mon)', date:'Oct 5', venue:'Bobcat Field at St. Columban', time:'4:30 to 6:00 PM', arrive:'TBD', ha:'AWAY',
+      mapLabel:'894 Oakland Rd, Loveland OH (St. Columban)', mapQuery:'894+Oakland+Rd+Loveland+OH+45140', wDate:'2026-10-05', wHour:16, lat:39.2680, lon:-84.2800 },
+    { kickoff:'2026-10-10T13:00:00', vs:'vs Victory', date:'Oct 10', venue:'Bishop Fenwick HS', time:'1:00 to 2:30 PM', arrive:'12:00 PM', ha:'HOME',
+      mapLabel:'4855 OH-122, Franklin OH (Bishop Fenwick HS)', mapQuery:'4855+OH-122+Franklin+OH+45006', wDate:'2026-10-10', wHour:13, lat:39.5449, lon:-84.3179 },
+    { kickoff:'2026-10-17T16:00:00', vs:'vs Cov Catholic 6th', date:'Oct 17', venue:'Bishop Fenwick HS', time:'4:00 to 5:30 PM', arrive:'3:00 PM', ha:'HOME',
+      mapLabel:'4855 OH-122, Franklin OH (Bishop Fenwick HS)', mapQuery:'4855+OH-122+Franklin+OH+45006', wDate:'2026-10-17', wHour:16, lat:39.5449, lon:-84.3179 }
+  ];
+
+  function pickCurrentGame() {
+    const now = Date.now();
+    for (const g of GAMES) {
+      // Keep highlighting a game until 4 hours after its kickoff, then move on.
+      if (new Date(g.kickoff).getTime() + 4 * 3600 * 1000 > now) return g;
+    }
+    return null;
+  }
+
+  const SELECTED_GAME  = pickCurrentGame();
+  const NEXT_GAME_DATE = SELECTED_GAME ? new Date(SELECTED_GAME.kickoff) : null;
+
+  function populateCountdownCard() {
+    const g = SELECTED_GAME;
+    const vsEl     = document.querySelector('.cd-vs');
+    const metaEl   = document.querySelector('.cd-meta');
+    const arriveEl = document.querySelector('.cd-arrive');
+    const labelEl  = document.querySelector('.cd-next-label');
+    if (!g) {
+      if (vsEl)     vsEl.textContent   = 'Season Complete';
+      if (metaEl)   metaEl.innerHTML   = 'Thank you for an amazing season!! 💛💙🐻🏈🎉';
+      if (arriveEl) arriveEl.textContent = '';
+      if (labelEl)  labelEl.textContent = '⏱ Go Bears';
+      return;
+    }
+    if (labelEl) labelEl.textContent = '⏱ Next Game';
+    if (vsEl)    vsEl.textContent = g.vs;
+    if (metaEl) {
+      const parts = [g.date, g.venue, g.time];
+      if (g.arrive) parts.push('Arrive ' + g.arrive);
+      const badgeClass = g.ha === 'HOME' ? 'badge-home' : 'badge-away';
+      metaEl.innerHTML = parts.join(' &nbsp;·&nbsp; ')
+        + ' &nbsp;·&nbsp; <span class="badge ' + badgeClass + '" style="font-size:.68rem;">' + g.ha + '</span>';
+    }
+    if (arriveEl) {
+      arriveEl.innerHTML = '📍 <a href="https://www.google.com/maps/dir/?api=1&destination=' + g.mapQuery
+        + '" target="_blank" style="color:var(--gold-bright);text-decoration:underline;">' + g.mapLabel + '</a>';
+    }
+  }
 
   function startCountdown() {
     const cdDays  = document.getElementById('cd-days');
@@ -1759,6 +1823,8 @@
     const cdMins  = document.getElementById('cd-mins');
     const cdSecs  = document.getElementById('cd-secs');
     const cdGrid  = document.getElementById('cd-grid');
+
+    if (!NEXT_GAME_DATE) { if (cdGrid) cdGrid.innerHTML = '<div class="countdown-done">🏈 GO BEARS! 🏈</div>'; return; }
 
     function pad(n) { return String(n).padStart(2, '0'); }
 
@@ -1805,10 +1871,11 @@
      Fetches hourly forecast from Open-Meteo (free, no API key).
      To update: change WEATHER_GAME_DATE and WEATHER_GAME_HOUR below.
   ── */
-  const WEATHER_GAME_DATE = '2026-08-22';
-  const WEATHER_GAME_HOUR = 11; // 11:00 AM kickoff
-  const WEATHER_LAT  = 39.3960;  // Mother Teresa (MTCES), Liberty Township OH
-  const WEATHER_LON  = -84.4230;
+  // Weather widget follows whichever game the countdown is currently showing.
+  const WEATHER_GAME_DATE = SELECTED_GAME ? SELECTED_GAME.wDate : '';
+  const WEATHER_GAME_HOUR = SELECTED_GAME ? SELECTED_GAME.wHour : 12;
+  const WEATHER_LAT  = SELECTED_GAME ? SELECTED_GAME.lat : 39.2086;
+  const WEATHER_LON  = SELECTED_GAME ? SELECTED_GAME.lon : -84.3539;
 
   function weatherCodeInfo(code) {
     if (code === 0)                          return { icon: '☀️',  desc: 'Clear' };
@@ -1868,6 +1935,7 @@
   window.addEventListener('DOMContentLoaded', () => {
     launchConfetti();
     initScrollFade();
+    populateCountdownCard();
     startCountdown();
     initParallax();
     fetchKickoffWeather();
