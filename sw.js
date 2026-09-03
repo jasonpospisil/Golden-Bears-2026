@@ -1,7 +1,7 @@
 /* Golden Bears Reserve 2026 - service worker
    Network-first so the newsletter always shows the latest content when online,
    with a cached fallback so the page still opens offline. */
-const CACHE = 'gb-2026-BUILD-20260903165507';
+const CACHE = 'gb-2026-BUILD-20260903165814';
 const ASSETS = [
   './',
   './index.html',
