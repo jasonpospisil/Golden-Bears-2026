@@ -834,8 +834,44 @@
       Tap any update to expand. Newest posts appear first.
     </p>
 
-    <!-- SEPT 14 UPDATE (current) — add new updates above this one each week -->
-    <div class="update-card gold-accent open" id="uc-sep14">
+    <!-- SEPT 20 UPDATE (current) — add new updates above this one each week -->
+    <div class="update-card gold-accent open" id="uc-sep20">
+      <div class="update-header" onclick="toggleCard('uc-sep20')">
+        <span class="update-date">Sept. 20, 2026</span>
+        <span class="update-headline">🐻 Golden Bears Update!</span>
+        <span class="toggle-icon">▼</span>
+      </div>
+      <div class="update-body">
+        <p>🎉 <strong>CONGRATULATIONS on a great game yesterday!!</strong> The GB's came out to play and got the <strong>W</strong>!! 💙💛</p>
+        <p>📷 <strong>PICTURES FROM THE GAME YESTERDAY:</strong> Thank you, Hodge Family!! Here is the <a href="https://adobe.ly/4y7ihiX" target="_blank">link</a>.</p>
+        <p>🏈 Looking forward to seeing everyone at our <strong>Monday Night Football</strong> game tomorrow!! Players need to arrive at <strong>St. Susanna no later than 5:00 PM</strong>.</p>
+        <p>🍿 <strong>CONCESSIONS:</strong> St. Susanna will have their concession stand open for the game!! Pretzels, chips, drinks, popcorn and candy, so bring a few dollars!!</p>
+        <img src="st-susanna-concessions.jpg" alt="St. Susanna football concession stand will be open: pretzels, chips, drinks, popcorn, candy. Reserve football September 21, 6:00 PM vs Golden Bears" onclick="openLightbox(this.src, this.alt)" style="width:180px;max-width:100%;height:auto;border-radius:10px;margin-top:.5rem;display:block;cursor:zoom-in;border:1px solid #e2e8f0;">
+        <p style="font-size:.8rem;color:var(--gray);margin-top:.4rem;">🔍 Tap to enlarge!!</p>
+        <p>⭐ <strong>GRAND FAN DAY, OCTOBER 3RD:</strong> If you haven't already, please be sure to complete the <a href="https://docs.google.com/spreadsheets/d/1vbNV2kI42t5DJZeAwl7XHZ4CRwfYz1pmYCvVJc-H5JQ/edit?gid=0#gid=0" target="_blank">Google Sheet</a> to indicate how many Grand Fans will be in attendance for the game!!</p>
+        <p style="margin-left:1.3rem;">✍️ I will be at the field before practice this week (most likely <strong>Thursday</strong>) to start getting the autographs of the boys for the Grand Fan roster cards!!</p>
+        <p>🙋 <strong>VOLUNTEERS:</strong> Still waiting on the SignUp Genius for our <strong>October 3rd</strong> game, but be thinking about what volunteer spot you will be taking!!</p>
+        <div style="margin-left:1.3rem;">
+          <p><strong>After the Game</strong></p>
+          <ul>
+            <li>🌭 Concession Stand (3) <em>Adult(s) with child is OK</em></li>
+            <li>🍔 Grill (1)</li>
+            <li>🎟️ Admissions (2)</li>
+          </ul>
+          <p><strong>During the Game</strong></p>
+          <ul>
+            <li>⛓️ Chain Gang (3) <em>Ages 12 and up</em></li>
+            <li>🎙️ Announcer (1)</li>
+            <li>⏱️ Clock (1)</li>
+            <li>👀 Spotter (1)</li>
+          </ul>
+        </div>
+        <p>🩷 <strong>OCTOBER 10TH: PINK OUT GAME!!</strong> Boys can wear pink accessories for this game (gloves, socks, mouth guards, arm sleeves, etc.) to support breast cancer awareness!! If you're interested in ordering pink socks, do so sooner than later!!</p>
+      </div>
+    </div>
+
+    <!-- SEPT 14 UPDATE — kept for history, collapsed -->
+    <div class="update-card" id="uc-sep14">
       <div class="update-header" onclick="toggleCard('uc-sep14')">
         <span class="update-date">Sept. 14, 2026</span>
         <span class="update-headline">🐻 Golden Bears Update!</span>
@@ -1210,7 +1246,7 @@
         <tr class="away-row">
           <td><span class="game-date">Sep 21</span><br><span class="game-time">6:00 to 8:00 PM</span><br><span class="game-time">Week 4</span></td>
           <td><span class="badge badge-bgame">Monday Game</span></td>
-          <td>TBD</td>
+          <td>Arrive 5:00 PM<br><span class="game-time">Kickoff 6:00 PM</span></td>
           <td>TBD<br><span class="game-venue">At St. Susanna</span></td>
           <td><span class="badge badge-away">AWAY</span></td>
           <td class="game-venue">
@@ -1407,6 +1443,7 @@
         <div class="game-card-top away"><strong>Sep 21</strong> &nbsp;Week 4&nbsp;<span class="badge badge-bgame">Monday Game</span>&nbsp;<span class="badge badge-away">AWAY</span></div>
         <div class="game-card-body">
           <div class="row"><span class="lbl">Opponent</span> TBD (At St. Susanna)</div>
+          <div class="row"><span class="lbl">Arrive</span> 5:00 PM</div>
           <div class="row"><span class="lbl">Kickoff</span> 6:00 to 8:00 PM</div>
           <div class="row"><span class="lbl">Location</span> St. Susanna School, 500 Reading Rd, Mason OH 45040 &nbsp;<a href="https://www.google.com/maps/dir/?api=1&destination=500+Reading+Rd+Mason+OH+45040" target="_blank">📍 Directions</a></div>
         </div>
@@ -1905,7 +1942,7 @@
       mapLabel:'25 Joe Nuxhall Way, Fairfield OH (Joyce Park)', mapQuery:'25+Joe+Nuxhall+Way+Fairfield+OH+45014', wDate:'2026-09-12', wHour:15, lat:39.3466, lon:-84.5602 },
     { kickoff:'2026-09-19T11:00:00', vs:'@ St. Ignatius', date:'Sep 19', venue:'St. Ignatius (Field 1)', time:'11:00 AM to 12:30 PM', arrive:'10:00 AM', ha:'AWAY',
       mapLabel:'5222 North Bend Rd, Cincinnati OH (St. Ignatius)', mapQuery:'5222+North+Bend+Rd+Cincinnati+OH+45247', wDate:'2026-09-19', wHour:11, lat:39.1889, lon:-84.6030 },
-    { kickoff:'2026-09-21T18:00:00', vs:'@ St. Susanna (Mon)', date:'Sep 21', venue:'St. Susanna', time:'6:00 to 8:00 PM', arrive:'TBD', ha:'AWAY',
+    { kickoff:'2026-09-21T18:00:00', vs:'@ St. Susanna (Mon)', date:'Sep 21', venue:'St. Susanna', time:'6:00 to 8:00 PM', arrive:'5:00 PM', ha:'AWAY',
       mapLabel:'500 Reading Rd, Mason OH (St. Susanna)', mapQuery:'500+Reading+Rd+Mason+OH+45040', wDate:'2026-09-21', wHour:18, lat:39.3601, lon:-84.3097 },
     { kickoff:'2026-09-27T16:00:00', vs:'@ SASEAS (Sun)', date:'Sep 27', venue:'Madeira HS', time:'4:00 to 5:30 PM', arrive:'3:00 PM', ha:'AWAY',
       mapLabel:'7465 Loannes Dr, Cincinnati OH (Madeira HS)', mapQuery:'7465+Loannes+Dr+Cincinnati+OH+45243', wDate:'2026-09-27', wHour:16, lat:39.1900, lon:-84.3730 },
