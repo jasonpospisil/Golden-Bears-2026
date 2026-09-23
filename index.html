@@ -237,6 +237,7 @@
     .badge-agame { background: #ede9fe; color: #5b21b6; }
     .badge-bgame { background: #fef9c3; color: #854d0e; }
     .badge-cancelled { background: #fee2e2; color: #991b1b; }
+    .red-em { color: #dc2626; font-size: 1.22em; letter-spacing: .01em; text-decoration: underline; text-underline-offset: .12em; }
     .cancelled-row td { opacity: .62; }
     .cancelled-row .game-date, .cancelled-row .game-time { text-decoration: line-through; }
     .cancelled-card { opacity: .7; }
@@ -685,6 +686,7 @@
     body.dark .update-headline { color: #e2e8f0; }
     body.dark .update-body p,
     body.dark .update-body li { color: #cbd5e1; }
+    body.dark .red-em { color: #f87171; }
     body.dark .update-body strong { color: #f1f5f9; }
     body.dark .update-body a { color: #60a5fa; }
     body.dark .update-body .highlight { background: #2d1f00; border-left-color: var(--gold); color: #fde68a; }
@@ -811,12 +813,6 @@
   ════════════════════════════ -->
   <div id="tab-news" class="tab-content active">
 
-    <!-- ── CANCELLATION BANNER (auto-hides after the date in hideAfter) ── -->
-    <div class="cancel-banner" id="cancel-banner" data-hide-after="2026-09-22T00:00:00">
-      <strong>🌧️ TONIGHT'S GAME IS CANCELLED</strong>
-      Our Monday night game at St. Susanna on Sept. 21 has been cancelled due to field conditions from all the rain. Stay dry, Bears!!
-    </div>
-
     <!-- ── NEXT GAME COUNTDOWN ── -->
     <div class="countdown-card" id="countdown-card">
       <!-- Floating cheer text -->
@@ -857,8 +853,43 @@
       Tap any update to expand. Newest posts appear first.
     </p>
 
-    <!-- SEPT 21 UPDATE (current) — add new updates above this one each week -->
-    <div class="update-card gold-accent open" id="uc-sep21">
+    <!-- SEPT 23 UPDATE (current) — add new updates above this one each week -->
+    <div class="update-card gold-accent open" id="uc-sep23">
+      <div class="update-header" onclick="toggleCard('uc-sep23')">
+        <span class="update-date">Sept. 23, 2026</span>
+        <span class="update-headline">🐻 Golden Bears Update!</span>
+        <span class="toggle-icon">▼</span>
+      </div>
+      <div class="update-body">
+        <p>🏈 <strong>THIS <span class="red-em">SUNDAY</span>, SEPT. 27:</strong> We take on <strong>SASEAS</strong> at <strong>Madeira High School</strong>!! Arrive at <strong>3:00 PM</strong>, kickoff is <strong>4:00 PM</strong>. <a href="https://www.google.com/maps/dir/?api=1&amp;destination=7465+Loannes+Dr+Cincinnati+OH+45243" target="_blank">📍 Get directions</a> (7465 Loannes Dr, Cincinnati OH 45243).</p>
+        <img src="madeira-field-layout.png" alt="Aerial view of Madeira High School: Howe Stadium, home and visitor stands, concession stand, restrooms, gate, warm up field and parking" onclick="openLightbox(this.src, this.alt)" style="width:100%;max-width:320px;height:auto;border-radius:10px;margin-top:.5rem;display:block;cursor:zoom-in;border:1px solid #e2e8f0;">
+        <p style="font-size:.8rem;color:var(--gray);margin-top:.4rem;">🔍 Tap the aerial view to enlarge!! Stands, concessions, restrooms, gate and parking are all marked.</p>
+        <p style="margin-left:1.3rem;">🎟️ <strong>Entrance Cost:</strong> $3.00 Adult, $2.00 Child, $5.00 Family</p>
+        <p style="margin-left:1.3rem;">🌭 <strong>Cash Concessions</strong> will be available <strong>1:00 to 5:30 PM</strong>. Items include drinks, chips, candy, burgers, dogs, brats, and metts.</p>
+        <p style="margin-left:1.3rem;">🅿️ <strong>Parking:</strong> Ample parking is onsite in the high school lot.</p>
+        <p>⭐ <strong>GRAND FAN DAY, OCTOBER 3RD:</strong> We need a headcount!! Hop into the <a href="https://docs.google.com/spreadsheets/d/1vbNV2kI42t5DJZeAwl7XHZ4CRwfYz1pmYCvVJc-H5JQ/edit?gid=0#gid=0" target="_blank">Google Sheet</a> and tell us how many Grand Fans are coming to the game with you!! That headcount is how we make sure every Grand Fan goes home with a roster card and a little gift from the boys, so we really do need your number!! We are still under half the team, so if your player is not on that list yet, this one is for you!! 🙏 <strong>All RSVPs are due Friday, September 25th</strong>!!</p>
+        <p style="margin-left:1.3rem;">✍️ I will be at practice tomorrow to start the autograph process for the boys!!</p>
+        <p>🙋 <strong>VOLUNTEERS:</strong> Word is the SignUp Genius will not land until the week of our <strong>October 3rd</strong> home game, so there is nothing to sign up for just yet!! Take a peek at the spots below and continue thinking about which one has your name on it, because we are going to need <strong>YOU</strong>!! 🙌</p>
+        <div style="margin-left:1.3rem;">
+          <p><strong>After the Game</strong></p>
+          <ul>
+            <li>🌭 Concession Stand (3) <em>Adult(s) with child is OK</em></li>
+            <li>🍔 Grill (1)</li>
+            <li>🎟️ Admissions (2)</li>
+          </ul>
+          <p><strong>During the Game</strong></p>
+          <ul>
+            <li>⛓️ Chain Gang (3) <em>Ages 12 and up</em></li>
+            <li>🎙️ Announcer (1)</li>
+            <li>⏱️ Clock (1)</li>
+            <li>👀 Spotter (1)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEPT 21 UPDATE — kept for history, collapsed -->
+    <div class="update-card" id="uc-sep21">
       <div class="update-header" onclick="toggleCard('uc-sep21')">
         <span class="update-date">Sept. 21, 2026</span>
         <span class="update-headline">🐻 Golden Bears Update!</span>
