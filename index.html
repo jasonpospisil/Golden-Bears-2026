@@ -238,6 +238,7 @@
     .badge-bgame { background: #fef9c3; color: #854d0e; }
     .badge-cancelled { background: #fee2e2; color: #991b1b; }
     .red-em { color: #dc2626; font-size: 1.22em; letter-spacing: .01em; text-decoration: underline; text-underline-offset: .12em; }
+    .pink-em { color: #ec4899; }
     .cancelled-row td { opacity: .62; }
     .cancelled-row .game-date, .cancelled-row .game-time { text-decoration: line-through; }
     .cancelled-card { opacity: .7; }
@@ -687,6 +688,7 @@
     body.dark .update-body p,
     body.dark .update-body li { color: #cbd5e1; }
     body.dark .red-em { color: #f87171; }
+    body.dark .pink-em { color: #f9a8d4; }
     body.dark .update-body strong { color: #f1f5f9; }
     body.dark .update-body a { color: #60a5fa; }
     body.dark .update-body .highlight { background: #2d1f00; border-left-color: var(--gold); color: #fde68a; }
@@ -853,8 +855,45 @@
       Tap any update to expand. Newest posts appear first.
     </p>
 
-    <!-- SEPT 23 UPDATE (current) — add new updates above this one each week -->
-    <div class="update-card gold-accent open" id="uc-sep23">
+    <!-- SEPT 28 UPDATE (current) — add new updates above this one each week -->
+    <div class="update-card gold-accent open" id="uc-sep28">
+      <div class="update-header" onclick="toggleCard('uc-sep28')">
+        <span class="update-date">Sept. 28, 2026</span>
+        <span class="update-headline">🐻 Golden Bears Update!</span>
+        <span class="toggle-icon">▼</span>
+      </div>
+      <div class="update-body">
+        <p>🎉 <strong>CONGRATULATIONS, BEARS!!</strong> What an impressive win on Sunday!! These boys keep getting better every single week and it is so fun to watch!! 💙💛</p>
+        <p>📷 <strong>GAME DAY PHOTOS:</strong> A huge thank you to <strong>Caitlin</strong> for <a href="https://unscriptedphotographers.com/caitlinmariephotography/reserve-5-6-2026" target="_blank">her game day photos</a> (you can always find this one on the <strong>Quick Links</strong> tab!!) and to the <strong>Hodge Family</strong> for <a href="https://lightroom.adobe.com/shares/f70f9c6e8f9a4275ac42ba6e9266d738" target="_blank">these great shots</a>!! We are so thankful to have you both capturing these in-game moments for our families!!</p>
+        <p>⭐ <strong>GRAND FAN DAY IS SATURDAY!!</strong> We cannot wait to celebrate our Grand Fans!! If you responded to the Grand Fan count sheet, swing by the <strong>Golden Bear tent</strong> (on the side of the parking lot) to pick up their <strong>personalized VIP passes</strong> and a <strong>small gift</strong> from the boys to their #1 fans...besides you, of course!! 💙💛</p>
+        <p style="margin-left:1.3rem;">🎪 Bring some drinks, a favorite snack, and celebrate our amazing Grand Fans with us before the game!!</p>
+        <p>📍 <strong>FIELD LOCATION:</strong> We will be playing on the <strong>soccer field</strong> on Saturday!!</p>
+        <p>🙋 <strong>VOLUNTEERS, IT IS GO TIME!!</strong> The <a href="https://www.signupgenius.com/go/10C0B45A4AB22A6FD0-65298470-reserve#/" target="_blank">SignUp Genius</a> is live and there is a spot with your name on it!! 🙌 A big THANK YOU to the families who have already grabbed one, you are making this home game happen!! If you have not claimed yours yet, take a look below and pick the one that fits your game day best!!</p>
+        <div style="margin-left:1.3rem;">
+          <p><strong>During the Game</strong> (12:45 to 2:30 PM)</p>
+          <ul>
+            <li>👀 Spotter</li>
+            <li>⏱️ Clock</li>
+          </ul>
+          <p><strong>After the Game</strong> (2:30 to 4:00 PM)</p>
+          <ul>
+            <li>🌭 Concessions (3)</li>
+            <li>🍔 Grill (1)</li>
+            <li>🎟️ Admissions (2)</li>
+          </ul>
+          <p><strong>After the Varsity Game</strong> (4:00 to 4:45 PM)</p>
+          <ul>
+            <li>🧹 Clean Up (2)</li>
+          </ul>
+        </div>
+        <p>💗 Don't worry if you don't land your first choice this time!! We will need you again on <strong>October 10th</strong> when we take on <strong>Victory</strong> for our <strong class="pink-em">PINK OUT</strong> game honoring Breast Cancer Awareness!!</p>
+        <p style="margin-left:1.3rem;">🔗 The SignUp Genius will be posted as soon as I receive it!!</p>
+        <p>🌙 <strong>MONDAY NIGHT FOOTBALL, OCTOBER 5TH:</strong> We will be taking on the <strong>Silvercats</strong> at <strong>Bobcat Field at St. Columban</strong> (Loveland)!! Details will be posted as we get closer to the game!!</p>
+      </div>
+    </div>
+
+    <!-- SEPT 23 UPDATE — kept for history, collapsed -->
+    <div class="update-card" id="uc-sep23">
       <div class="update-header" onclick="toggleCard('uc-sep23')">
         <span class="update-date">Sept. 23, 2026</span>
         <span class="update-headline">🐻 Golden Bears Update!</span>
@@ -1693,9 +1732,9 @@
         <span class="link-icon">🗺️</span>
         <div><div class="link-label">Home Field Directions</div><div class="link-sub">Bishop Fenwick High School</div></div>
       </a>
-      <a href="#" onclick="event.preventDefault()" class="link-card" style="opacity:.6;cursor:default;">
+      <a href="https://www.signupgenius.com/go/10C0B45A4AB22A6FD0-65298470-reserve#/" target="_blank" class="link-card">
         <span class="link-icon">🙋</span>
-        <div><div class="link-label">Volunteer Sign Up</div><div class="link-sub">Coming Soon</div></div>
+        <div><div class="link-label">Volunteer Sign Up</div><div class="link-sub">SignUp Genius</div></div>
       </a>
       <a href="https://www.storessimple.com/513promo/groupproducts.php?prodgroup_id=32989&prodgroupbypass=true" target="_blank" class="link-card">
         <span class="link-icon">👕</span>
