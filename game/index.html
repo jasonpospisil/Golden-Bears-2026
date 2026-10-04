@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>Golden Bears Football '26</title>
 <!-- saved to a phone or iPad home screen, open full screen like an app -->
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -176,6 +176,20 @@
 
   /* roster editor */
   #roster .tablewrap{width:min(680px,96%);max-height:54vh;overflow:auto;border:2px solid #3a3223;background:#12100a}
+  /* the depth chart and lineup get the whole screen, not just the game box */
+  #roster.on, #lineup.on{position:fixed;inset:0;z-index:40;justify-content:flex-start;
+    background:#0d0b07;gap:10px;
+    padding:max(10px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right))
+            max(10px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left))}
+  #roster .tablewrap{flex:1 1 auto;min-height:0;max-height:none;width:min(760px,100%);
+    -webkit-overflow-scrolling:touch;touch-action:pan-x pan-y}
+  #roster, #lineup{touch-action:pan-x pan-y}
+  #lineupList{flex:0 0 auto}
+  #roster table{font-size:clamp(8px,1.6vw,10px)}
+  #roster td{padding:3px 2px}
+  #roster input:not(.nm){width:3.4em;padding:6px 2px}
+  #roster select{min-width:9em}
+  @media (max-height:520px){ #roster .sub, #lineup .sub{display:none} #roster h2, #lineup h2{font-size:10px} #roster .btn, #lineup .btn{padding:9px 12px} }
   table{border-collapse:collapse;width:100%;font-size:clamp(5px,1.1vw,9px)}
   th{position:sticky;top:0;background:#241e14;color:var(--gold);padding:6px 4px;font-weight:400;z-index:1}
   td{padding:2px 3px;border-top:1px solid #241e14;text-align:center}
