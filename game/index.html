@@ -793,6 +793,7 @@ let speechReady = false;
 function unlockSpeech(){
   /* iPad Safari only lets speech start from a tap, so prime it on one */
   if (!canSpeak || speechReady) return;
+  try { speechSynthesis.getVoices(); } catch(e){}       /* start the voice list loading now */
   try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); speechReady = true; } catch(e){}
 }
 /* a man's voice if the device has one (iPhone/iPad, Mac, Windows, Chrome all name theirs) */
@@ -812,16 +813,33 @@ function qbVoice(){
   } catch(e){}
   return null;
 }
-if (canSpeak){ try { speechSynthesis.onvoiceschanged = () => { qbVoiceCache = undefined; }; } catch(e){} }
+if (canSpeak){
+  try { speechSynthesis.getVoices(); } catch(e){}
+  try { speechSynthesis.onvoiceschanged = () => { qbVoiceCache = undefined; }; } catch(e){}
+}
 function say(word){
   if (!sfxOn) return;
   if (canSpeak){
     try {
-      const u = new SpeechSynthesisUtterance(word.toLowerCase());
-      const v = qbVoice();
-      if (v){ u.voice = v; u.lang = v.lang; }
-      u.rate = 1.1; u.pitch = 0.35; u.volume = 1;          /* low and barking, like a QB at the line */
-      speechSynthesis.speak(u);
+      const speak = () => {
+        const u = new SpeechSynthesisUtterance(word.toLowerCase());
+        const v = qbVoice();
+        if (v){ u.voice = v; u.lang = v.lang; }
+        u.rate = 1.1; u.pitch = 0.35; u.volume = 1;        /* low and barking, like a QB at the line */
+        speechSynthesis.speak(u);
+      };
+      /* the device's voice list can still be loading on the first call of the game:
+         wait (briefly) for it, so even the first DOWN is in the deep voice */
+      if (!qbVoice() && !say.waited){
+        say.waited = true;
+        let done = false;
+        const go = () => { if (done) return; done = true; speak(); };
+        try { speechSynthesis.addEventListener('voiceschanged', go, { once:true }); } catch(e){}
+        setTimeout(go, 450);
+        try { speechSynthesis.getVoices(); } catch(e){}
+        return;
+      }
+      speak();
       return;
     } catch(e){}
   }
