@@ -3071,7 +3071,7 @@ addEventListener('keydown', e=>{ if (e.key===' '||e.key==='Enter'){ if (G.phase=
 document.addEventListener('pointerdown', ()=>{ if (G.phase==='celebrate') endCelebration(); });
 cv.addEventListener('pointerdown', (e)=>{
   if (G.grap){ grappleTap(); return; }
-  if (G.phase==='stats'){ nextStatPage(); return; }
+  if (G.phase==='stats'){ if (statNextHit(e)) nextStatPage(); return; }
   if (G.phase==='intro') endIntro();
   else if (G.phase==='kick') kickInput();
   else if (!G.offIsUser && (G.phase==='presnap' || G.phase==='live')) pickDefenderAt(e);
@@ -3176,7 +3176,15 @@ function nextStatPage(){
 }
 function updateStats(dt){
   const v = G.statView; if (!v) return;
-  v.t += dt; if (v.t >= STAT_PAGE_T) nextStatPage();
+  v.t += dt;                                 /* no timer: the NEXT button moves it along */
+}
+/* the NEXT button, bottom right of the stats screen (canvas coordinates) */
+const STAT_NEXT = { x: W - 128, y: H - 40, w: 116, h: 30 };
+function statNextHit(e){
+  const r = cv.getBoundingClientRect();
+  const x = (e.clientX - r.left) * W / r.width, y = (e.clientY - r.top) * H / r.height;
+  const b = STAT_NEXT, pad = 14;
+  return x >= b.x - pad && x <= b.x + b.w + pad && y >= b.y - pad && y <= b.y + b.h + pad;
 }
 function renderStats(){
   const v = G.statView; if (!v) return;
@@ -3268,8 +3276,13 @@ function renderStats(){
     ctx.fillStyle = i === v.i ? '#f5c233' : '#3a3222';
     ctx.fillRect(Math.round(sx + i * dx) - 3, H - 22, 6, 6);
   }
-  ctx.fillStyle = '#f5c233'; ctx.fillRect(0, H - 6, Math.round(W * Math.min(1, v.t / STAT_PAGE_T)), 3);
-  T('TAP TO SKIP', W - 14, H - 19, 6, '#6b6250', 'right');
+  /* NEXT button */
+  const b = STAT_NEXT, last = v.i >= v.pages.length - 1;
+  const label = !last ? 'NEXT >' : v.title === 'HALFTIME' ? '2ND HALF >' : 'DONE >';
+  const glow = Math.floor(v.t * 2) % 2 === 0;
+  ctx.fillStyle = '#8a6a12'; ctx.fillRect(b.x, b.y + 3, b.w, b.h);
+  ctx.fillStyle = glow ? '#f5c233' : '#ffd95a'; ctx.fillRect(b.x, b.y, b.w, b.h);
+  T(label, b.x + b.w/2, b.y + b.h/2 + 1, 9, '#1a1405', 'center');
   ctx.restore();
 }
 
@@ -5057,6 +5070,10 @@ function songTick(){
     const choices = playTracks.map((t, i) => i).filter(i => i !== playIdx);
     pendIdx = choices.length ? choices[(Math.random() * choices.length) | 0] : playIdx;
   }
+  /* halftime stats: Bright Side */
+  if (G.phase === 'stats' && G.statView && G.statView.title === 'HALFTIME' && sfxOn && !G.paused &&
+      playIdx !== 1 && pendIdx !== 1){ pendIdx = 1; want = SONG_LEVEL; }
+  if (G.phase === 'stats' && pendIdx === 1) want = SONG_LEVEL;
   let restart = false;
   if (pendIdx >= 0){
     const nx = playTracks[pendIdx];
