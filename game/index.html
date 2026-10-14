@@ -793,12 +793,32 @@ function unlockSpeech(){
   if (!canSpeak || speechReady) return;
   try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); speechReady = true; } catch(e){}
 }
+/* a man's voice if the device has one (iPhone/iPad, Mac, Windows, Chrome all name theirs) */
+const QB_VOICES = ['aaron','arthur','fred','gordon','daniel','reed','ralph','rocko','eddy','grandpa',
+                   'google uk english male','david','mark','guy','alex','tom','oliver','james','male'];
+let qbVoiceCache;
+function qbVoice(){
+  if (qbVoiceCache !== undefined && qbVoiceCache) return qbVoiceCache;
+  try {
+    const all = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang));
+    if (!all.length) return null;
+    for (const name of QB_VOICES){
+      const v = all.find(x => x.name.toLowerCase().includes(name));
+      if (v){ qbVoiceCache = v; return v; }
+    }
+    qbVoiceCache = null;
+  } catch(e){}
+  return null;
+}
+if (canSpeak){ try { speechSynthesis.onvoiceschanged = () => { qbVoiceCache = undefined; }; } catch(e){} }
 function say(word){
   if (!sfxOn) return;
   if (canSpeak){
     try {
       const u = new SpeechSynthesisUtterance(word.toLowerCase());
-      u.rate = 1.35; u.pitch = 0.55; u.volume = 1;
+      const v = qbVoice();
+      if (v){ u.voice = v; u.lang = v.lang; }
+      u.rate = 1.1; u.pitch = 0.35; u.volume = 1;          /* low and barking, like a QB at the line */
       speechSynthesis.speak(u);
       return;
     } catch(e){}
@@ -1155,8 +1175,8 @@ function startPlay(){
 }
 
 /* ------------------------------------------------------ snap cadence
-   READY, DOWN, then HUT on a loop until the offense snaps it.
-   You snap on your first press; a press during READY/DOWN is held
+   DOWN, SET, then HUT on a loop until the offense snaps it.
+   You snap on your first press; a press during DOWN/SET is held
    and fires on the first HUT. The CPU offense snaps on a random HUT. */
 const CAD_DOWN = 0.8, CAD_HUT = 1.6, CAD_EVERY = 0.7;
 function beginPresnap(){
@@ -1177,9 +1197,9 @@ function cadenceCall(word){
 }
 function updatePresnap(dt){
   G.cadT += dt;
-  if (G.cadStep < 0){ G.cadStep = 0; cadenceCall('READY'); return; }
+  if (G.cadStep < 0){ G.cadStep = 0; cadenceCall('DOWN'); return; }
   if (G.cadStep === 0){
-    if (G.cadT >= CAD_DOWN){ G.cadStep = 1; cadenceCall('DOWN'); }
+    if (G.cadT >= CAD_DOWN){ G.cadStep = 1; cadenceCall('SET'); }
     return;
   }
   if (G.cadT >= CAD_HUT + (G.cadStep-1)*CAD_EVERY){
