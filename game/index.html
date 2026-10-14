@@ -4957,10 +4957,74 @@ function voiceStop(v, fade, tr){
   try { v.src.stop(AC.currentTime + fade + 0.05); } catch(e){}
   setTimeout(()=>{ try { v.src.disconnect(); v.g.disconnect(); } catch(e){} }, (fade + 0.3) * 1000);
 }
-function trackTick(tr, want, restart){
+/* ---- iPhone safety net -----------------------------------------------
+   iOS can leave the Web Audio engine paused ("suspended"/"interrupted")
+   after the spoken cadence, a phone call or switching apps, and it will
+   only restart from a tap. So every tap nudges it awake, and if it still
+   isn't running (or a song won't decode) the song plays through a plain
+   <audio> player instead, which each tap has already unlocked.        */
+let audioStuckSince = 0;
+function audioStuck(){
+  if (!AC) return false;
+  if (AC.state === 'running'){ audioStuckSince = 0; return false; }
+  if (!audioStuckSince) audioStuckSince = performance.now();
+  return performance.now() - audioStuckSince > 1500;
+}
+function trackEl(tr){
+  if (tr.el !== undefined) return tr.el;
+  try {
+    const bin = atob(tr.b64), u8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+    const el = new Audio();
+    el.src = URL.createObjectURL(new Blob([u8], { type:'audio/mp4' }));
+    el.loop = true; el.preload = 'auto'; el.setAttribute('playsinline', '');
+    tr.el = el;
+  } catch(e){ tr.el = null; }
+  return tr.el;
+}
+function allTracks(){ return [kickSong].concat(playTracks); }
+function audioUnlock(){
+  try {
+    AC = AC || new (window.AudioContext||window.webkitAudioContext)();
+    if (AC.state !== 'running') AC.resume();
+    const b = AC.createBuffer(1, 1, 22050), src = AC.createBufferSource();   /* the classic iOS wake-up */
+    src.buffer = b; src.connect(AC.destination); src.start(0);
+  } catch(e){}
+  /* touch each backup player inside the tap so iOS lets it play later */
+  if (!sfxOn) return;
+  for (const tr of allTracks()){
+    if (tr.primed) continue;
+    const el = trackEl(tr);
+    if (!el) continue;
+    tr.primed = true;
+    try { const pr = el.play(); if (!tr.elOn) el.pause(); if (pr && pr.catch) pr.catch(err=>{ if (err && err.name === 'NotAllowedError') tr.primed = false; }); } catch(e){ tr.primed = false; }
+  }
+}
+['touchend','pointerdown','keydown'].forEach(ev => addEventListener(ev, audioUnlock, { capture:true, passive:true }));
+function elTick(tr, want, restart){
+  const el = trackEl(tr);
+  if (!el) return;
   if (want > 0){
-    if (!AC || tr.failed) return;
-    if (AC.state === 'suspended'){ try { AC.resume(); } catch(e){} }
+    if (!tr.elOn || restart){
+      try { el.currentTime = 0; } catch(e){}
+      try { const pr = el.play(); if (pr && pr.catch) pr.catch(()=>{ tr.elOn = false; }); } catch(e){}
+      tr.elOn = true;
+    }
+  } else if (tr.elOn){
+    try { el.pause(); } catch(e){}
+    tr.elOn = false;
+  }
+}
+function trackTick(tr, want, restart){
+  if (tr.failed || audioStuck()){
+    if (tr.cur){ voiceStop(tr.cur, 0.3, tr); tr.cur = null; tr.level = 0; }
+    elTick(tr, want, restart);
+    return;
+  }
+  if (tr.elOn){ try { tr.el.pause(); } catch(e){} tr.elOn = false; }   /* Web Audio is back: hand over */
+  if (want > 0){
+    if (!AC) return;
+    if (AC.state !== 'running'){ try { AC.resume(); } catch(e){} }
     if (!tr.buf){ trackLoad(tr); return; }
     if (!tr.cur){ voiceStart(tr, want, FADE_IN); tr.level = want; return; }
     if (restart){ voiceStop(tr.cur, XFADE, tr); voiceStart(tr, want, XFADE * 0.8); tr.level = want; return; }
@@ -4990,13 +5054,13 @@ function songTick(){
   /* a new play call: pick the next song (never the same one twice running) and
      decode just that one — decoding all of them at once is too much for a phone */
   if (want > 0 && fresh){
-    const choices = playTracks.map((t, i) => i).filter(i => i !== playIdx && !playTracks[i].failed);
+    const choices = playTracks.map((t, i) => i).filter(i => i !== playIdx);
     pendIdx = choices.length ? choices[(Math.random() * choices.length) | 0] : playIdx;
   }
   let restart = false;
   if (pendIdx >= 0){
     const nx = playTracks[pendIdx];
-    if (nx.failed){ pendIdx = -1; }
+    if (nx.failed || audioStuck()){ restart = pendIdx === playIdx; playIdx = pendIdx; pendIdx = -1; }
     else if (!nx.buf){ trackLoad(nx); }
     else { restart = pendIdx === playIdx; playIdx = pendIdx; pendIdx = -1; }
   }
