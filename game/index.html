@@ -1201,6 +1201,7 @@ function startPlay(){
 const CAD_DOWN = 0.8, CAD_HUT = 1.6, CAD_EVERY = 0.7;
 function beginPresnap(){
   G.phase = 'presnap'; G.dir = 1; G.pickT = 0;
+  setMirror();
   G.lineX = losX(); G.fdX = firstX();       /* painted lines hold until the next snap */
   G.target = null; G.caught = null; G.hl = null; G.hlT = 0;
   cam.fx = cam.x = clamp(losX() - W*0.42, 0, FIELD_W - W);
@@ -1307,6 +1308,7 @@ function stBegin(st){
   G.bannerSub = '';
   st.stage = 'set'; st.t = 0; st.power = 0; st.pdir = 1; st.locked = null;
   st.cpuAt = rnd(0.55, 1.25);
+  setMirror();
   G.st = st;
   G.phase = 'kick';
   hideScreens(); pads(true);
@@ -1720,7 +1722,7 @@ function cycleDefender(step){
 /* tap a defender on the field to take him over */
 function pickDefenderAt(e){
   const r = cv.getBoundingClientRect();
-  const wx = (e.clientX - r.left) * (W / r.width) + cam.x;
+  const wx = screenToWorldX((e.clientX - r.left) * (W / r.width));
   const wy = (e.clientY - r.top) * (H / r.height) - FIELD_TOP + 10;   /* aim at the body, not the feet */
   let best = null, bd = 34;
   for (const p of G.players){
@@ -1818,6 +1820,7 @@ function readInput(){
   if (keys['arrowup']||keys['w']) iy-=1;
   if (keys['arrowdown']||keys['s']) iy+=1;
   ix += touchDir.x; iy += touchDir.y;
+  if (G.mirror) ix = -ix;                     /* the picture is flipped, so the stick is too */
   const m = Math.hypot(ix,iy) || 1;
   inputV.x = clamp(ix,-1,1)/ (m>1?m:1);
   inputV.y = clamp(iy,-1,1)/ (m>1?m:1);
@@ -2089,7 +2092,7 @@ function drawRef(){
     const w = ctx.measureText(word).width + 8;
     const bx = clamp(X - w/2, 2, W - w - 2);
     ctx.fillStyle = '#080704'; ctx.fillRect(bx, Y + 4, w, 11);
-    ctx.fillStyle = '#f5c233'; ctx.fillText(word, bx + w/2, Y + 10);
+    ctx.fillStyle = '#f5c233'; wText(word, bx + w/2, Y + 10);
   }
 }
 
@@ -2124,7 +2127,7 @@ function drawChains(){
     ctx.fillStyle = '#0d0b07'; ctx.fillRect(X - 1, yb - 14, 2, 16);
     ctx.fillStyle = '#ff7a1a'; ctx.fillRect(X - 5, yb - 22, 11, 9);
     ctx.font = '6px "Press Start 2P", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#0d0b07'; ctx.fillText(String(clamp(G.down, 1, 4)), X + 1, yb - 17);
+    ctx.fillStyle = '#0d0b07'; wText(String(clamp(G.down, 1, 4)), X + 1, yb - 17);
   }
 }
 
@@ -2263,6 +2266,21 @@ function settlePlayers(dt){
   }
 }
 
+/* where the ball will come to rest: a tackled runner keeps sliding as he
+   falls (same physics as settlePlayers), and the ball ends up a few
+   pixels past his body the way he fell — exactly where it's drawn */
+function ballSpotX(c){
+  if (!c.down) return c.x;
+  let x = c.x, vx = c.vx || 0, t = c.down.t || 0, landed = !!c.down.landed;
+  const dt = 1/60;
+  for (let i = 0; i < 90; i++){
+    t += dt;
+    if (t >= 0.24) landed = true;
+    vx *= Math.exp(-dt * (landed ? 10 : (t < 0 ? 0.5 : 3)));
+    x += vx * dt;
+  }
+  return clamp(x, 4, FIELD_W - 4) + c.down.dir * 5;
+}
 function stepPos(p, dt){
   p.x += p.vx*dt; p.y += p.vy*dt;
   p.y = clamp(p.y, 3, FIELD_H-3);
@@ -2842,8 +2860,14 @@ function endPlay(reason){
   G.popT = 0;
   recvButtons(null);
   const c = G.carrier;
+  /* the spot is where the BALL ends up: a runner who falls forward gets the yards */
+  const bx = c ? ballSpotX(c) : 0;
+  /* he went down but the ball reached over the goal line: that's six */
+  if (reason === 'tackle' && c && !G.conv && (G.playKind === 'scrim' || G.playKind === 'kickoff' || G.playKind === 'return')){
+    if ((G.dir || 1) > 0 ? bx >= GOAL_R : bx <= GOAL_L) reason = 'td';
+  }
   /* brought down (or out of bounds) behind his own goal line: safety */
-  if ((reason === 'tackle' || reason === 'oob') && G.playKind === 'scrim' && c && c.x < GOAL_L) reason = 'safety';
+  if ((reason === 'tackle' || reason === 'oob') && G.playKind === 'scrim' && c && bx < GOAL_L) reason = 'safety';
   /* who brought him down */
   const tk = (reason === 'tackle' || reason === 'safety') && G.tackler && c && G.tackler !== c ? G.tackler : null;
   const isSack = !!(tk && G.playKind === 'scrim' && G.off && c === G.off.qb && !G.target &&
@@ -2851,7 +2875,7 @@ function endPlay(reason){
   G.hlBy = tk ? `${isSack ? 'SACKED' : 'TACKLED'} BY #${tk.num} ${tk.name}` : null;
   G.bannerSub = tk ? `${isSack ? 'SACK' : 'TACKLE'}: #${tk.num} ${tk.name}` : '';
   const userTackle = !!(tk && !G.offIsUser && G.playKind === 'scrim');    /* one of ours made the stop */
-  const gYds = c ? Math.round((c.x - losX()) / PPY) : 0;
+  const gYds = c ? Math.round((bx - losX()) / PPY) : 0;
   recordPlay(reason, c, tk, isSack, gYds);
   /* a 2-point try is one play: in the end zone or no good */
   if (G.conv){
@@ -2871,7 +2895,7 @@ function endPlay(reason){
     setTimeout(()=>{ if (G.phase === 'dead') otPossessionOver(); }, 1600);
     return;
   }
-  const endYard = c ? clamp(Math.round((c.x - GOAL_L)/PPY), -9, 100) : G.ballOn;
+  const endYard = c ? clamp(Math.round((bx - GOAL_L)/PPY), -9, 100) : G.ballOn;
   const gained = endYard - G.ballOn;
   let msg = '';
 
@@ -2895,8 +2919,8 @@ function endPlay(reason){
   /* the end of an interception return: the team that picked it off
      already has the ball, so spot it from THEIR goal line */
   if (G.playKind === 'return' && reason !== 'td' && c){
-    const retYds = Math.max(0, Math.round(Math.abs(c.x - G.retStartX) / PPY));
-    const own = Math.round((GOAL_R - c.x) / PPY);
+    const retYds = Math.max(0, Math.round(Math.abs(bx - G.retStartX) / PPY));
+    const own = Math.round((GOAL_R - bx) / PPY);
     const tb = own <= 0;
     G.ballOn = tb ? 20 : clamp(own, 1, 99);
     G.down = 1; G.toGo = Math.min(10, 100 - G.ballOn);
@@ -2998,7 +3022,7 @@ function endPlay(reason){
     G.down = 1; G.toGo = Math.min(10, 100-G.ballOn);
     msg = 'FIRST DOWN'; firstDown = true;
     beep(700,.1,'square',.05);
-    refSignal('first', c ? c.x : null);
+    refSignal('first', c ? bx : null);
     if (G.offIsUser) crowdCheer(gained >= 15 ? 0.75 : 0.4);
   } else {
     G.down++;
@@ -3939,6 +3963,34 @@ function drawIntroCard(x, e){
 
 /* ============================================================== rendering */
 const cam = { x:0, fx:0 };
+/* ---- which way the field faces -----------------------------------------
+   The play itself always runs left-to-right inside the game; when the team
+   with the ball should be going right-to-left this quarter, the picture is
+   drawn mirrored (text and numbers excepted) and the stick is mirrored too.
+   The Bears attack to the right in the 1st and 3rd quarters, to the left
+   in the 2nd and 4th, so the field flips every quarter.               */
+function bearsGoRight(){ return (G.qIdx % 2) === 0; }
+function setMirror(){
+  const offRight = G.offIsUser ? bearsGoRight() : !bearsGoRight();
+  G.mirror = !offRight;
+}
+function world(fn){
+  ctx.save();
+  if (G.mirror){ ctx.translate(W, 0); ctx.scale(-1, 1); }
+  fn();
+  ctx.restore();
+}
+/* text and pixel numbers inside the mirrored world still read forwards */
+function wText(str, x, y){
+  if (!G.mirror){ ctx.fillText(str, x, y); return; }
+  ctx.save(); ctx.translate(x, 0); ctx.scale(-1, 1); ctx.fillText(str, 0, y); ctx.restore();
+}
+function wNum(cx, y, value, color, scale){
+  if (!G.mirror){ drawNum(cx, y, value, color, scale); return; }
+  ctx.save(); ctx.translate(cx, 0); ctx.scale(-1, 1); drawNum(0, y, value, color, scale); ctx.restore();
+}
+/* a screen x (0..W) back to a spot on the field */
+function screenToWorldX(sx){ return G.mirror ? cam.x + (W - sx) : cam.x + sx; }
 const SHAKE_TIME = 0.16;
 function render(dt){
   if (G.phase === 'intro'){ renderIntro(); return; }
@@ -3964,16 +4016,19 @@ function render(dt){
   if (Math.abs(want - cam.fx) < 0.6) cam.fx = want;
   cam.x = Math.round(cam.fx);
 
-  drawField();
-  drawChains();
-  drawPlayers();
-  drawSnapBall();
-  drawFx();
-  drawBubble();
-  drawUserLabel();
-  if (G.ball) drawBall();
+  world(()=>{
+    drawField();
+    drawChains();
+    drawPlayers();
+    drawSnapBall();
+    drawFx();
+    drawBubble();
+    drawUserLabel();
+    if (G.ball) drawBall();
+    if (G.phase==='kick') drawKickBall();
+  });
   drawHUD();
-  drawRef();
+  world(drawRef);
   drawFooter();
   drawCarrierTag();
   drawPop();
@@ -4013,7 +4068,7 @@ function drawField(){
     const letters = team.abbr.split('');
     letters.forEach((ch,i)=>{
       ctx.fillStyle = team.trim;
-      ctx.fillText(ch, Math.round(sx(x0)) + 5*PPY, FIELD_TOP + FIELD_H/2 - (letters.length-1)*9 + i*18);
+      wText(ch, Math.round(sx(x0)) + 5*PPY, FIELD_TOP + FIELD_H/2 - (letters.length-1)*9 + i*18);
     });
   };
   /* on a return the teams have swapped roles but not ends */
@@ -4046,8 +4101,18 @@ function drawField(){
     const X = sx(GOAL_L + y*PPY);
     if (X < -40 || X > W+40) continue;
     const label = y<=50 ? y : 100-y;
-    drawNum(X, FIELD_TOP+20, label, 'rgba(242,244,236,.9)', 2);
-    drawNum(X, FIELD_TOP+FIELD_H-30, label, 'rgba(242,244,236,.9)', 2);
+    wNum(X, FIELD_TOP+20, label, 'rgba(242,244,236,.9)', 2);
+    wNum(X, FIELD_TOP+FIELD_H-30, label, 'rgba(242,244,236,.9)', 2);
+    /* the arrow beside each number points to the nearer goal line */
+    if (y !== 50){
+      const sd = y < 50 ? -1 : 1, ax = X + sd * 13;
+      ctx.fillStyle = 'rgba(242,244,236,.9)';
+      for (const my of [FIELD_TOP + 25, FIELD_TOP + FIELD_H - 25]){
+        ctx.beginPath();
+        ctx.moveTo(ax + sd * 5, my); ctx.lineTo(ax, my - 4); ctx.lineTo(ax, my + 4);
+        ctx.closePath(); ctx.fill();
+      }
+    }
   }
 
   /* sideline chalk */
@@ -4102,7 +4167,7 @@ function drawPlayers(){
     G.targets.forEach((t,i)=>{
       const X = t.x-cam.x, Y = Math.max(FIELD_TOP + 10, FIELD_TOP+t.y-30);   /* never under the scoreboard */
       ctx.fillStyle='rgba(0,0,0,.72)'; ctx.fillRect(X-7,Y-8,14,13);
-      ctx.fillStyle='#fff'; ctx.fillText(String(i+1), X, Y-1);
+      ctx.fillStyle='#fff'; wText(String(i+1), X, Y-1);
     });
   }
 }
@@ -4634,7 +4699,7 @@ function drawBubble(){
   ctx.fillRect(X-1, base+3, 3, 1);
   ctx.fillStyle = '#0d0b07';
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(text, X, y0 + h/2 + 1);
+  wText(text, X, y0 + h/2 + 1);
 }
 
 /* the kid's 8-bit portrait if we have one, otherwise his own sprite */
@@ -4708,7 +4773,7 @@ function drawUserLabel(){
   ctx.fillRect(bx, by, 1, h); ctx.fillRect(bx + w - 1, by, 1, h);
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillStyle = '#f2f4ec';
-  ctx.fillText(txt, bx + w/2, by + h/2 + 1);
+  wText(txt, bx + w/2, by + h/2 + 1);
   ctx.restore();
 }
 
@@ -4809,11 +4874,10 @@ function drawBanner(){
   if (sub){ ctx.font='8px "Press Start 2P", monospace'; ctx.fillStyle='#f2f4ec'; ctx.fillText(sub, W/2, y + 24); }
 }
 
-function drawKickMeter(){
+function drawKickBall(){
   const st = G.st;
   if (!st) return;
   const b = st.ball;
-
   /* the ball, with its shadow on the grass */
   if (b){
     const X = Math.round(b.x - cam.x), Yg = Math.round(FIELD_TOP + b.y), Y = Yg - Math.round(b.z || 0);
@@ -4833,7 +4897,10 @@ function drawKickMeter(){
       ctx.fillStyle = '#efeade'; ctx.fillRect(X-1, Y, 3, 1);
     }
   }
-
+}
+function drawKickMeter(){
+  const st = G.st;
+  if (!st) return;
   /* the power bar, bottom left, like the arcade cabinet */
   const title = st.kind === 'xp' ? 'EXTRA POINT'
               : st.kind === 'fg' ? `FIELD GOAL  ${st.D} YDS`
