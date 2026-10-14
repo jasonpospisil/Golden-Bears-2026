@@ -2335,6 +2335,8 @@ function openLane(p, forward){
 }
 
 /* where blockers should orient: the ball carrier, or the spot the pass is headed */
+const ESCORT_R = 140;      /* how close a receiver must be to the catch to come block */
+const ESCORT_HOLD = 0.3;   /* receivers are light blockers: they get in the way, then get shed */
 function focusPoint(p){
   if (G.carrier) return G.carrier;
   if (G.ball) return { x:G.ball.tx, y:G.ball.ty };
@@ -2392,6 +2394,29 @@ function offenseAI(p, dt, isPass){
     steer(p, c.x + 52, c.y, s*0.95);
     const foe = nearestFoe(p, 46);
     if (foe) steer(p, foe.x, foe.y, s);
+    return;
+  }
+  if (p.ai==='escort'){
+    /* after a catch: find the defender closing on the catcher and get between them */
+    const c = G.carrier;
+    if (!c){ p.vx*=0.9; p.vy*=0.9; return; }
+    let foe = p.assign && p.assign.stun<=0 && !p.assign.down ? p.assign : null;
+    if (!foe){
+      let bs = Infinity;
+      for (const d of G.players){
+        if (d.side!=='def' || d.stun>0 || d.down) continue;
+        if (G.players.some(o => o!==p && o.ai==='escort' && o.assign===d)) continue;
+        const dp = Math.hypot(d.x-p.x, d.y-p.y);
+        if (dp > 170) continue;
+        const sc = Math.hypot(d.x-c.x, d.y-c.y) + dp*0.6;
+        if (sc < bs){ bs = sc; foe = d; }
+      }
+      p.assign = foe;
+    }
+    if (foe){
+      const ang = Math.atan2(c.y - foe.y, c.x - foe.x);
+      steer(p, foe.x + Math.cos(ang)*9, foe.y + Math.sin(ang)*9, s);
+    } else steer(p, c.x + (G.dir||1)*55, c.y + (p.y - c.y)*0.6, s*0.9);
     return;
   }
   if (p.ai==='retblock'){
@@ -2572,7 +2597,7 @@ function knockDown(b, d){
   b.down = { t: 0, dir, landed: false, live: true };
   b.vx = dir * 85; b.vy = side * 22;
   /* in the open field on returns he's back up quicker */
-  b.stun = (b.ai === 'kickblock' || b.ai === 'retblock') ? 0.6 : KNOCK_T;
+  b.stun = (b.ai === 'kickblock' || b.ai === 'retblock' || b.ai === 'escort') ? 0.6 : KNOCK_T;
   b.assign = null; b.engagedT = 0;
   beep(140, .05, 'square', .035);
 }
@@ -2590,7 +2615,7 @@ function stepKnocked(p, dt){
 function resolveBlocks(dt){
   for (const b of G.players){
     if (b.side!=='off') continue;
-    if (!(b.ai==='block'||b.ai==='lead'||b.ai==='kickblock'||b.ai==='retblock')) continue;
+    if (!(b.ai==='block'||b.ai==='lead'||b.ai==='kickblock'||b.ai==='retblock'||b.ai==='escort')) continue;
     if (b.down) continue;
     for (const d of G.players){
       if (d.side!=='def' || d.stun>0 || d.fill) continue;
@@ -2612,7 +2637,7 @@ function resolveBlocks(dt){
           d.shedT = 0; d.engagedT = 0;
           /* at the line he's always put on the ground; in the open field on
              returns, about a third of the time (otherwise he's just shed) */
-          const openField = b.ai === 'kickblock' || b.ai === 'retblock';
+          const openField = b.ai === 'kickblock' || b.ai === 'retblock' || b.ai === 'escort';
           if (!openField || Math.random() < 0.35) knockDown(b, d);
           else { b.assign = null; b.stun = 0.35; }
         }
@@ -2792,6 +2817,11 @@ function resolveCatch(){
   const roll = Math.random();
   if (roll < pCatch){
     G.carrier = r; r.ai='carry'; r.immune = 0.25; G.caught = r;
+    /* nearby receivers stop their routes and come back to block for him */
+    for (const o of G.players){
+      if (o.side!=='off' || o===r || o.ai!=='route' || o.down) continue;
+      if (Math.hypot(o.x-r.x, o.y-r.y) < ESCORT_R){ o.ai = 'escort'; o.assign = null; o.hold = ESCORT_HOLD; }
+    }
     sfxCatch(); assignUser();
     if (b.dur >= 0.8) crowdCheer(G.offIsUser ? 0.7 : 0);
   } else if (!r.open && def && dd < 10 && roll > pCatch + (1-pCatch)*(G.matched ? 0.64 : 0.72)){
