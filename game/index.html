@@ -4991,7 +4991,17 @@ function drawKickBall(){
       const vx = (f.tx - f.sx) / f.dur;
       const vy = (f.ty - f.sy) / f.dur - Math.PI * Math.cos(k * Math.PI) * f.peak / f.dur;
       const ang = Math.atan2(vy, vx);
-      if (st.kind === 'punt') drawFootball(X, Y, ang, 'spiral', st.t * Math.PI * 2 * 4);
+      if (st.kind === 'punt'){
+        /* a 6th-grade punt: never a clean spiral. Some go end over end,
+           the rest wobble along like a wounded duck, nose flopping around */
+        if (!st.puntLook) st.puntLook = { tumble: Math.random() < 0.4, ph: rnd(0, 6.3), w: rnd(6, 9) };
+        const pl = st.puntLook, t = st.t;
+        if (pl.tumble) drawFootball(X, Y, 0, 'tumble', t * Math.PI * 2 * 1.7 * (vx >= 0 ? 1 : -1) + pl.ph);
+        else {
+          const wob = Math.sin(t * pl.w + pl.ph) * 0.75 + Math.sin(t * pl.w * 1.9 + 1.3) * 0.3;
+          drawFootball(X, Y, ang * 0.5 + wob, 'spiral', t * Math.PI * 2 * 1.2 + Math.sin(t * 5) * 1.5);
+        }
+      }
       else drawFootball(X, Y, 0, 'tumble', st.t * Math.PI * 2 * 2.6 * (vx >= 0 ? 1 : -1));
     } else {
       ctx.fillStyle = '#0d0b07'; ctx.fillRect(X-4, Y-3, 9, 7);
