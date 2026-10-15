@@ -318,7 +318,7 @@
       <h2>Pick your opponent</h2>
       <div class="grid" id="teamGrid"></div>
       <div class="row">
-        <button class="btn ghost" id="qlen">Quarters: 3:00</button>
+        <button class="btn ghost" id="qlen">Quarters: 1:30</button>
         <button class="btn ghost" id="backTitle">Back</button>
       </div>
     </div>
@@ -914,7 +914,7 @@ function stopMusic(){
 const G = {
   screen:'title',
   userTeam:0, cpuTeam:2, userIsHome:true,
-  qLen:180, qIdx:0, clock:180,
+  qLen:90, qIdx:0, clock:90,
   score:{user:0,cpu:0},
   offIsUser:true,
   ballOn:25, down:1, toGo:10,
@@ -5457,12 +5457,11 @@ $('rosterBack').addEventListener('click', ()=>{
 });
 
 /* quarter length + side toggles */
-const QLENS = [120,180,300];
-let qi = 1;
+const QLENS = [90,120,180,300];
+let qi = 0;
 $('qlen').addEventListener('click', ()=>{
   qi = (qi+1)%QLENS.length; G.qLen = QLENS[qi];
-  const m = G.qLen/60;
-  $('qlen').textContent = `Quarters: ${m}:00`;
+  $('qlen').textContent = `Quarters: ${Math.floor(G.qLen/60)}:${String(G.qLen%60).padStart(2,'0')}`;
 });
 function buildTeamGrid(){
   const g = $('teamGrid'); g.innerHTML='';
