@@ -4434,27 +4434,29 @@ function drawHUD(){
   ctx.fillStyle = '#15120c';
   ctx.fillRect(0,0,W,FIELD_TOP);
   drawStands();
-  hudPlate(4, 4, 122, 22); hudPlate(W - 124, 4, 122, 22);
+  /* both scores stacked on the left (away on top, home below); the right
+     corner is left clear for the SOUND and PAUSE buttons */
+  hudPlate(4, 4, 122, 38);
   hudPlate(W/2 - 118, 4, 236, 38);
   ctx.fillStyle = '#f5c233';
   ctx.fillRect(0,FIELD_TOP-2,W,2);
   ctx.textBaseline='middle'; ctx.textAlign='left';
 
   const u = teamOf(true), c = teamOf(false);
-  const chip = (x, team, score, hasBall) => {
-    ctx.fillStyle = team.jersey; ctx.fillRect(x, 8, 8, 14);
-    ctx.fillStyle = team.trim;   ctx.fillRect(x, 16, 8, 3);
+  const chip = (x, y, team, score, hasBall) => {
+    ctx.fillStyle = team.jersey; ctx.fillRect(x, y - 6, 8, 13);
+    ctx.fillStyle = team.trim;   ctx.fillRect(x, y + 1, 8, 3);
     ctx.font='9px "Press Start 2P", monospace';
     ctx.fillStyle = hasBall ? '#f5c233' : '#e8e4d6';
-    ctx.fillText(team.abbr, x+13, 15);
-    ctx.fillText(String(score), x+13+team.abbr.length*10+8, 15);
+    ctx.fillText(team.abbr, x+13, y);
+    ctx.textAlign='right'; ctx.fillText(String(score), 118, y); ctx.textAlign='left';
   };
   if (G.userHome){
-    chip(10, c, G.score.cpu, !G.offIsUser);
-    chip(W-118, u, G.score.user, G.offIsUser);
+    chip(10, 15, c, G.score.cpu, !G.offIsUser);
+    chip(10, 33, u, G.score.user, G.offIsUser);
   } else {
-    chip(10, u, G.score.user, G.offIsUser);
-    chip(W-118, c, G.score.cpu, !G.offIsUser);
+    chip(10, 15, u, G.score.user, G.offIsUser);
+    chip(10, 33, c, G.score.cpu, !G.offIsUser);
   }
 
   ctx.textAlign='center';
