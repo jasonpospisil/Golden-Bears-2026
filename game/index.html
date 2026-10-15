@@ -436,7 +436,7 @@ const TEAMS = [
   { name:'SILVERCATS',   abbr:'SIL', jersey:'#9aa0a6', trim:'#14110e', helmet:'#6f757a', pants:'#2a2a2a', num:'#14110e', rate:75 },
   { name:'VICTORY',      abbr:'VIC', jersey:'#5b3a8e', trim:'#e6c84a', helmet:'#3d2464', pants:'#d8d3c4', num:'#e6c84a', rate:74 },
   { name:'COV CATH',     abbr:'CCH', jersey:'#1b3c92', trim:'#f2f4ec', helmet:'#12295f', pants:'#e8e4d6', num:'#ffffff', rate:84 },
-  /* just for fun, single game only: the coaches. Twice the size, half the legs. */
+  /* just for fun, single game only: the coaches. Twice the size, and they let you know it. */
   { name:'THE COACHES',  abbr:'COA', jersey:'#2b2f36', trim:'#c9ced6', helmet:'#1a1d22', pants:'#7d838c', num:'#ffffff', rate:50, coaches:true }
 ];
 const COACH_IDX = TEAMS.length - 1;
@@ -451,7 +451,7 @@ function makeCoachRoster(){
   return SLOTS.map((s,i)=>{
     let n; do { n = 40 + ((Math.random()*59)|0); } while(used.has(n)); used.add(n);
     return { num:n, name:'COACH ' + names[i % names.length], pos:s.pos,
-             spd: Math.round(rnd(38,50)), pow: Math.round(rnd(40,50)), hnd: Math.round(rnd(45,60)) };
+             spd: Math.round(rnd(82,92)), pow: Math.round(rnd(95,99)), hnd: Math.round(rnd(75,88)) };
   });
 }
 
@@ -2013,7 +2013,7 @@ function takeDown(c, d){
   c.vy = c.vy * 0.3 + (d.vy || 0) * 0.25;
   d.down = { t: -0.03, dir: Math.abs(d.vx) > 4 ? Math.sign(d.vx) : dir, landed: false, dive: true };
   d.vx *= 0.7; d.vy *= 0.7;
-  if (isCoach(c)){                                 /* a Bear lights up a coach: knocked backwards */
+  if (isCoach(d) && !isCoach(c)){                  /* a coach lights up a Bear: knocked backwards */
     c.down.dir = Math.sign(c.x - d.x) || dir;
     c.vx = c.down.dir * 210 + (d.vx || 0) * 0.4; c.vy = (c.y - d.y) * 3;
     if (Math.random() < 0.5) floatText('BOOM!', c.x, c.y);
@@ -2622,10 +2622,10 @@ function knockDown(b, d){
   b.stun = (b.ai === 'kickblock' || b.ai === 'retblock' || b.ai === 'escort') ? 0.6 : KNOCK_T;
   b.assign = null; b.engagedT = 0;
   beep(140, .05, 'square', .035);
-  if (isCoach(b)) pancakeCoach(b, d);
+  if (vsCoaches() && isCoach(d) && !isCoach(b)) pancakeKid(b, d);
 }
-/* a Bear hits a coach: he's blown back and flattened */
-function pancakeCoach(b, d){
+/* a coach hits a Bear: the kid is blown back and flattened */
+function pancakeKid(b, d){
   const away = Math.sign(b.x - d.x) || -(G.dir || 1) * (b.side === 'off' ? 1 : -1);
   b.down = { t: 0, dir: away, landed: false, live: true };
   b.vx = away * 230 + (d.vx || 0) * 0.5; b.vy = (b.y - d.y) * 3 + (d.vy || 0) * 0.3;
@@ -2654,16 +2654,16 @@ function resolveBlocks(dt){
       if (d.side!=='def' || d.stun>0 || d.fill) continue;
       const dist = Math.hypot(d.x-b.x, d.y-b.y);
       if (vsCoaches()){
-        /* the coaches: a Bear blocker drives his man back and flattens him;
-           a coach trying to block a Bear gets run over */
+        /* the coaches: a coach blocking a Bear drives the kid back and flattens him;
+           a Bear trying to block a coach gets run over */
         if (dist < 22){
-          if (isCoach(d)){
+          if (isCoach(b) && !isCoach(d)){
             d.engagedT = 0.09;
             const a = Math.atan2(d.y-b.y, d.x-b.x);
             d.x += Math.cos(a)*70*dt; d.y += Math.sin(a)*70*dt;
             d.pancT = (d.pancT || 0) + dt;
             if (d.pancT > 0.3){ d.pancT = 0; knockDown(d, b); }
-          } else if (isCoach(b)){
+          } else if (isCoach(d) && !isCoach(b)){
             b.pancT = (b.pancT || 0) + dt;
             if (b.pancT > 0.12){ b.pancT = 0; knockDown(b, d); }
           }
@@ -2710,9 +2710,9 @@ function tackleCheck(){
     const reach = engaged ? 4 : (d.isUser && d.dive>0 ? 17 : star ? 13 : 11);
     if (dist < reach * (isCoach(d) || isCoach(c) ? 1.5 : 1)){
       if (c.immune>0) continue;
-      /* a coach trying to tackle a Bear usually bounces off and lands on his back */
-      if (isCoach(d) && Math.random() < 0.85){ knockDown(d, c); c.immune = 0.3; continue; }
-      if (wantGrapple(c, d, engaged)){ startGrapple(c, d); return; }
+      /* a Bear trying to tackle a coach usually bounces off and lands on his back */
+      if (isCoach(c) && !isCoach(d) && Math.random() < 0.85){ knockDown(d, c); c.immune = 0.3; continue; }
+      if (!isCoach(d) && wantGrapple(c, d, engaged)){ startGrapple(c, d); return; }
       let br = 0.06 + (c.pow - d.pow)*0.005 + (c.turbo?0.03:0) + (engaged?0.34:0);
       if (c.dive>0) br += 0.05;
       if (star) br *= 0.45;                              /* and he wraps up */
