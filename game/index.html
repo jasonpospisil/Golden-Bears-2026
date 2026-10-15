@@ -5197,10 +5197,27 @@ function trackEl(tr){
   return tr.el;
 }
 function allTracks(){ return [kickSong].concat(playTracks); }
+/* Saved to the home screen, iOS runs the game as its own little app, and
+   there an audio engine that was started before the first tap — or that
+   iOS "interrupted" (a call, switching apps, the screen locking) — can stay
+   silent for good. So on a tap, if the engine isn't running, throw it away
+   and build a fresh one right inside the tap, which iOS always allows. */
+let acFromTap = false, acTries = 0;
+function freshAudioContext(){
+  try { if (AC && AC.close) AC.close(); } catch(e){}
+  AC = new (window.AudioContext||window.webkitAudioContext)();
+  acFromTap = true; acTries = 0; audioStuckSince = 0; noiseBuf = null;
+  for (const tr of allTracks()){ tr.cur = null; tr.level = 0; tr.fading = 0; }   /* old voices died with the old engine */
+}
 function audioUnlock(){
   try {
-    AC = AC || new (window.AudioContext||window.webkitAudioContext)();
-    if (AC.state !== 'running') AC.resume();
+    if (navigator.audioSession && navigator.audioSession.type !== 'playback') navigator.audioSession.type = 'playback';
+  } catch(e){}
+  try {
+    if (!AC || AC.state === 'closed' || AC.state === 'interrupted' ||
+        (AC.state !== 'running' && (!acFromTap || acTries >= 2))) freshAudioContext();
+    if (AC.state !== 'running'){ acTries++; const r = AC.resume(); if (r && r.then) r.then(()=>{ if (AC.state === 'running') acTries = 0; }).catch(()=>{}); }
+    else acTries = 0;
     const b = AC.createBuffer(1, 1, 22050), src = AC.createBufferSource();   /* the classic iOS wake-up */
     src.buffer = b; src.connect(AC.destination); src.start(0);
   } catch(e){}
@@ -5215,6 +5232,9 @@ function audioUnlock(){
   }
 }
 ['touchend','pointerdown','keydown'].forEach(ev => addEventListener(ev, audioUnlock, { capture:true, passive:true }));
+document.addEventListener('visibilitychange', ()=>{
+  if (document.visibilityState === 'visible' && AC && AC.state !== 'running'){ try { AC.resume(); } catch(e){} acTries = 2; }
+});
 function elTick(tr, want, restart){
   const el = trackEl(tr);
   if (!el) return;
