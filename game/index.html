@@ -4065,7 +4065,11 @@ const cam = { x:0, fx:0 };
    The Bears attack to the right in the 1st and 3rd quarters, to the left
    in the 2nd and 4th, so the field flips every quarter.               */
 function bearsGoRight(){ return (G.qIdx % 2) === 0; }
+/* the offense always attacks left to right (defense faces right to left);
+   flip FLIP_BY_QUARTER on to have the field switch ends every quarter */
+const FLIP_BY_QUARTER = false;
 function setMirror(){
+  if (!FLIP_BY_QUARTER){ G.mirror = false; return; }
   const offRight = G.offIsUser ? bearsGoRight() : !bearsGoRight();
   G.mirror = !offRight;
 }
