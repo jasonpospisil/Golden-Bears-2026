@@ -435,8 +435,25 @@ const TEAMS = [
   { name:'SASEAS',       abbr:'SAS', jersey:'#c23a2b', trim:'#14110e', helmet:'#8d2319', pants:'#2a2a2a', num:'#ffffff', rate:71 },
   { name:'SILVERCATS',   abbr:'SIL', jersey:'#9aa0a6', trim:'#14110e', helmet:'#6f757a', pants:'#2a2a2a', num:'#14110e', rate:75 },
   { name:'VICTORY',      abbr:'VIC', jersey:'#5b3a8e', trim:'#e6c84a', helmet:'#3d2464', pants:'#d8d3c4', num:'#e6c84a', rate:74 },
-  { name:'COV CATH',     abbr:'CCH', jersey:'#1b3c92', trim:'#f2f4ec', helmet:'#12295f', pants:'#e8e4d6', num:'#ffffff', rate:84 }
+  { name:'COV CATH',     abbr:'CCH', jersey:'#1b3c92', trim:'#f2f4ec', helmet:'#12295f', pants:'#e8e4d6', num:'#ffffff', rate:84 },
+  /* just for fun, single game only: the coaches. Twice the size, half the legs. */
+  { name:'THE COACHES',  abbr:'COA', jersey:'#2b2f36', trim:'#c9ced6', helmet:'#1a1d22', pants:'#7d838c', num:'#ffffff', rate:50, coaches:true }
 ];
+const COACH_IDX = TEAMS.length - 1;
+const COACH_SCALE = 2;
+function vsCoaches(){ return G.cpuTeam === COACH_IDX; }
+/* is this man one of the coaches? (same side test the drawing uses) */
+function isCoach(p){ return !!p && vsCoaches() && ((p.side === 'off') !== G.offIsUser); }
+const COACH_NAMES = ['BIG','SLOW','TIRED','CREAKY','DAD','POPS','SNACKS','NAPPY','GRUMPY','ACHY','OLD',
+                     'WHEEZY','SORE','LUNCH','CLIPBOARD','WHISTLE','COFFEE','RECLINER','HAMMY','KNEES','BACKS','MOM'];
+function makeCoachRoster(){
+  const used = new Set(), names = COACH_NAMES.slice().sort(()=>Math.random()-0.5);
+  return SLOTS.map((s,i)=>{
+    let n; do { n = 40 + ((Math.random()*59)|0); } while(used.has(n)); used.add(n);
+    return { num:n, name:'COACH ' + names[i % names.length], pos:s.pos,
+             spd: Math.round(rnd(38,50)), pow: Math.round(rnd(40,50)), hnd: Math.round(rnd(45,60)) };
+  });
+}
 
 /* the 2026 schedule */
 const SCHEDULE = [
@@ -1996,6 +2013,11 @@ function takeDown(c, d){
   c.vy = c.vy * 0.3 + (d.vy || 0) * 0.25;
   d.down = { t: -0.03, dir: Math.abs(d.vx) > 4 ? Math.sign(d.vx) : dir, landed: false, dive: true };
   d.vx *= 0.7; d.vy *= 0.7;
+  if (isCoach(c)){                                 /* a Bear lights up a coach: knocked backwards */
+    c.down.dir = Math.sign(c.x - d.x) || dir;
+    c.vx = c.down.dir * 210 + (d.vx || 0) * 0.4; c.vy = (c.y - d.y) * 3;
+    if (Math.random() < 0.5) floatText('BOOM!', c.x, c.y);
+  }
   const extra = G.players.find(p => p !== d && p.side === d.side && !p.down && p.stun <= 0 &&
                                     Math.hypot(p.x - c.x, p.y - c.y) < 28);
   if (extra){
@@ -2600,6 +2622,17 @@ function knockDown(b, d){
   b.stun = (b.ai === 'kickblock' || b.ai === 'retblock' || b.ai === 'escort') ? 0.6 : KNOCK_T;
   b.assign = null; b.engagedT = 0;
   beep(140, .05, 'square', .035);
+  if (isCoach(b)) pancakeCoach(b, d);
+}
+/* a Bear hits a coach: he's blown back and flattened */
+function pancakeCoach(b, d){
+  const away = Math.sign(b.x - d.x) || -(G.dir || 1) * (b.side === 'off' ? 1 : -1);
+  b.down = { t: 0, dir: away, landed: false, live: true };
+  b.vx = away * 230 + (d.vx || 0) * 0.5; b.vy = (b.y - d.y) * 3 + (d.vy || 0) * 0.3;
+  b.stun = 1.7; b.assign = null; b.engagedT = 0;
+  G.shakeT = Math.max(G.shakeT || 0, SHAKE_TIME * 0.6);
+  puff(b.x, b.y - 10, 'hit'); sfxHit();
+  if (Math.random() < 0.5) floatText('PANCAKE!', b.x, b.y);
 }
 /* while the play is on: fall, land, slide to a stop, get back up */
 function stepKnocked(p, dt){
@@ -2620,6 +2653,23 @@ function resolveBlocks(dt){
     for (const d of G.players){
       if (d.side!=='def' || d.stun>0 || d.fill) continue;
       const dist = Math.hypot(d.x-b.x, d.y-b.y);
+      if (vsCoaches()){
+        /* the coaches: a Bear blocker drives his man back and flattens him;
+           a coach trying to block a Bear gets run over */
+        if (dist < 22){
+          if (isCoach(d)){
+            d.engagedT = 0.09;
+            const a = Math.atan2(d.y-b.y, d.x-b.x);
+            d.x += Math.cos(a)*70*dt; d.y += Math.sin(a)*70*dt;
+            d.pancT = (d.pancT || 0) + dt;
+            if (d.pancT > 0.3){ d.pancT = 0; knockDown(d, b); }
+          } else if (isCoach(b)){
+            b.pancT = (b.pancT || 0) + dt;
+            if (b.pancT > 0.12){ b.pancT = 0; knockDown(b, d); }
+          }
+        }
+        continue;
+      }
       if (d.blitz && G.matched && dist < 15){
         /* a beat of contact, then he rips through and puts the blocker on the ground */
         d.bustT = (d.bustT || 0) + dt;
@@ -2658,8 +2708,10 @@ function tackleCheck(){
     const engaged = d.engagedT > 0;
     const star = d.isUser && !G.offIsUser;               /* your defender: the playmaker */
     const reach = engaged ? 4 : (d.isUser && d.dive>0 ? 17 : star ? 13 : 11);
-    if (dist < reach){
+    if (dist < reach * (isCoach(d) || isCoach(c) ? 1.5 : 1)){
       if (c.immune>0) continue;
+      /* a coach trying to tackle a Bear usually bounces off and lands on his back */
+      if (isCoach(d) && Math.random() < 0.85){ knockDown(d, c); c.immune = 0.3; continue; }
       if (wantGrapple(c, d, engaged)){ startGrapple(c, d); return; }
       let br = 0.06 + (c.pow - d.pow)*0.005 + (c.turbo?0.03:0) + (engaged?0.34:0);
       if (c.dive>0) br += 0.05;
@@ -3811,17 +3863,30 @@ function puff(x, y, kind){
       life:0, max:rnd(.25,.45), c:'#c6d9b4', s:2 });
   }
 }
+/* a word that pops up off a big hit and floats away */
+function floatText(str, x, y){
+  if (fx.some(f => f.txt)) return;            /* one at a time */
+  fx.push({ txt:str, x, y: y - 30, vx:0, vy:-26, life:0, max:0.9, c:'#f5c233', s:0 });
+}
 function stepFx(dt){
   for (let i=fx.length-1; i>=0; i--){
     const f = fx[i];
     f.life += dt;
     if (f.life >= f.max){ fx.splice(i,1); continue; }
-    f.x += f.vx*dt; f.y += f.vy*dt; f.vy += 60*dt;
+    f.x += f.vx*dt; f.y += f.vy*dt; if (!f.txt) f.vy += 60*dt;
   }
 }
 function drawFx(){
   for (const f of fx){
     const k = 1 - f.life/f.max;
+    if (f.txt){
+      ctx.globalAlpha = Math.min(1, k * 2);
+      ctx.font = '9px "Press Start 2P", monospace'; ctx.textAlign = 'center';
+      const X = Math.round(f.x - cam.x), Y = Math.round(FIELD_TOP + f.y);
+      ctx.fillStyle = '#0d0b07'; wText(f.txt, X + 1, Y + 1);
+      ctx.fillStyle = f.c; wText(f.txt, X, Y);
+      continue;
+    }
     ctx.globalAlpha = Math.max(0, k);
     ctx.fillStyle = f.c;
     ctx.fillRect(Math.round(f.x - cam.x), Math.round(FIELD_TOP + f.y), f.s, f.s);
@@ -4209,6 +4274,7 @@ function drawPlayer(p){
   if (grappling) X += Math.round(Math.sin(G.grap.t * 38 + (p === G.grap.c ? 0 : 1.6)) * 1.4);
   if (X < -28 || X > W+28) return;
   const ti = (p.side==='off') ? offTeamIdx() : defTeamIdx();
+  const K = TEAMS[ti].coaches ? COACH_SCALE : 1;          /* the coaches are twice our size */
 
   /* going down: the hit (or the dive), then sprawled on the turf */
   const dn = p.down && p.down.t >= 0 ? p.down : null;
@@ -4220,9 +4286,9 @@ function drawPlayer(p){
   /* contact shadow — stretched out under a man who's down */
   ctx.fillStyle = 'rgba(0,0,0,.34)';
   ctx.beginPath();
-  if (flat) ctx.ellipse(X, Y + 2, 13, 3, 0, 0, 6.3);
-  else if (dn) ctx.ellipse(X + dn.dir * 4, Y + 3, 11, 3, 0, 0, 6.3);
-  else ctx.ellipse(X, Y+3, 9, 3, 0, 0, 6.3);
+  if (flat) ctx.ellipse(X, Y + 2, 13*K, 3*K, 0, 0, 6.3);
+  else if (dn) ctx.ellipse(X + dn.dir * 4 * K, Y + 3, 11*K, 3*K, 0, 0, 6.3);
+  else ctx.ellipse(X, Y+3, 9*K, 3*K, 0, 0, 6.3);
   ctx.fill();
 
   let fi = F_IDLE;
@@ -4237,9 +4303,11 @@ function drawPlayer(p){
   if (dn){
     ctx.translate(X, Y + bounce);
     ctx.rotate(rot);
+    if (K !== 1) ctx.scale(K, K);
     ctx.drawImage(img, -12, -23);
   } else {
     ctx.translate(X, Y);
+    if (K !== 1) ctx.scale(K, K);
     if (p.stun > 0) ctx.rotate(p.face * 1.4);
     else if (p.dive > 0) ctx.rotate(p.face * 0.95);
     else if (grappling) ctx.rotate(p.face * 0.32);      /* leaning into each other */
@@ -4250,8 +4318,8 @@ function drawPlayer(p){
   /* ball tucked against the near arm */
   if (p === G.carrier && !ballLoose()){
     /* on the ground the ball comes down with him */
-    const bx = flat ? X + dn.dir * 5 : dn ? X + dn.dir * 8 : X + p.face*8;
-    const by = flat ? Math.round(Y - 4 + bounce) : dn ? Y - 10 : Y - 12;
+    const bx = flat ? X + dn.dir * 5 * K : dn ? X + dn.dir * 8 * K : X + p.face * 8 * K;
+    const by = flat ? Math.round(Y - 4 * K + bounce) : dn ? Y - 10 * K : Y - 12 * K;
     ctx.fillStyle = '#0d0b07';
     ctx.fillRect(bx-3, by-1, 7, 5);
     ctx.fillStyle = '#8a4a1c';
@@ -4265,7 +4333,7 @@ function drawPlayer(p){
   if (p.isUser){
     ctx.fillStyle = '#f5c233';
     ctx.beginPath();
-    ctx.moveTo(X, Y-26); ctx.lineTo(X-5, Y-33); ctx.lineTo(X+5, Y-33); ctx.closePath(); ctx.fill();
+    ctx.moveTo(X, Y-26);   /* (the user is always a Bear, never a coach) */ ctx.lineTo(X-5, Y-33); ctx.lineTo(X+5, Y-33); ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#0d0b07';
     ctx.fillRect(X-1, Y-31, 2, 2);
     if (p.stam < 100){
@@ -5408,7 +5476,7 @@ function showMatchup(oppIdx, home, week, mode){
     `<span class="blk" style="background:${t.jersey}"></span><span>${t.name}</span><span class="rt">${note}</span>`;
   const rec = seasonRecord();
   $('mHome').innerHTML = card(us, mode==='season' ? `${rec.w}-${rec.l}${rec.t?'-'+rec.t:''}` : 'your team');
-  $('mAway').innerHTML = card(them, `rating ${them.rate + (home?0:2)}`);
+  $('mAway').innerHTML = card(them, them.coaches ? 'just for fun' : `rating ${them.rate + (home?0:2)}`);
   $('mVs').textContent = home ? 'VS' : 'AT';
   show('matchup');
 }
@@ -5469,7 +5537,7 @@ function buildTeamGrid(){
     if (i === 0) return;
     const b = document.createElement('button');
     b.className='team';
-    b.innerHTML = `<span class="helm" style="background:${t.jersey}"></span><span>${t.name}<br><span style="color:#8d846c">RATING ${t.rate}</span></span>`;
+    b.innerHTML = `<span class="helm" style="background:${t.jersey}"></span><span>${t.name}<br><span style="color:#8d846c">${t.coaches ? 'JUST FOR FUN' : 'RATING ' + t.rate}</span></span>`;
     b.addEventListener('click', ()=>showMatchup(i, true, 0, 'single'));
     g.appendChild(b);
   });
@@ -5482,7 +5550,8 @@ function newGame(oppIdx, home, mode){
   G.mode = mode || 'single';
   G.userHome = home !== false;
   G.week = pending ? pending.week : 0;
-  cpuRoster = makeRoster(TEAMS[oppIdx].rate + (G.userHome ? 0 : 2) + DIFF().rate);
+  cpuRoster = TEAMS[oppIdx].coaches ? makeCoachRoster()
+            : makeRoster(TEAMS[oppIdx].rate + (G.userHome ? 0 : 2) + DIFF().rate);
   /* build both teams' frames up front so nothing hitches mid-play */
   for (const ti of [G.userTeam, G.cpuTeam])
     for (let f=0; f<=F_DIVE; f++){ getSprite(ti,f,true); getSprite(ti,f,false); }
