@@ -1443,14 +1443,23 @@ function stUpdate(dt){
 
   /* the bar sweeps up and down until the kick is struck */
   if (st.stage === 'aim'){
+    const prevPow = st.power;
     st.power += st.pdir * dt * DIFF().bar;
     if (st.power >= 1){ st.power = 1; st.pdir = -1; }
     if (st.power <= 0){ st.power = 0; st.pdir = 1; }
     if (!st.userKicks && st.t >= st.cpuAt){
-      const target = st.kind === 'punt' ? rnd(0.55, 0.95)
-                   : st.kind === 'kickoff' ? rnd(0.55, 1)
-                   : clamp(st.need + rnd(-0.07, 0.3), 0.2, 1);
-      stLock(target);
+      /* the computer picks how hard it wants it, then waits for the moving
+         bar to get there and stops it on that spot — so the bar you see
+         is exactly the kick it gets */
+      if (st.cpuTarget == null)
+        st.cpuTarget = st.kind === 'punt' ? rnd(0.55, 0.95)
+                     : st.kind === 'kickoff' ? rnd(0.55, 1)
+                     : clamp(st.need + rnd(-0.07, 0.3), 0.2, 1);
+      const tg = st.cpuTarget;
+      if ((prevPow - tg) * (st.power - tg) <= 0 || st.t > st.cpuAt + 3){
+        if (st.t <= st.cpuAt + 3) st.power = tg;
+        stLock(st.power);
+      }
     } else if (st.userKicks && st.t > 4) stLock(st.power);     /* never stall */
   }
 
