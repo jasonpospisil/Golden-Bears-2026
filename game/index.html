@@ -399,7 +399,7 @@
         Move: the thumbstick, or arrow keys / WASD.<br>
         Offense: tap the field to snap. On pass plays, tap a receiver's number to throw.<br>
         Defense: tap a player (or B) to pick your man. A is turbo; B switches during the play.<br>
-        Grabbed with the ball? TAP TAP TAP as fast as you can to break the tackle.<br><br>
+        Grabbed on a running play? TAP TAP TAP as fast as you can to break the tackle.<br><br>
         Each side picks one of four plays. Guess their play right on defense and your guys blow it up.
       </p>
       <button class="btn" id="helpBack">Back</button>
@@ -2203,8 +2203,9 @@ const GRAP_SLOW = 0.35;                           /* everyone else moves at abou
 const GRAP_CPU = [0.20, 0.27, 0.33, 0.41];        /* how hard the computer pushes, Pony..Varsity */
 function wantGrapple(c, d, engaged){
   if (engaged || (G.grapN || 0) >= 2 || G.phase !== 'live') return false;
-  if (G.playKind === 'scrim' && G.off && c === G.off.qb && !G.target &&
-      OFF_PLAYS[G.offPlay] && OFF_PLAYS[G.offPlay].kind === 'pass') return false;   /* sacks stay sacks */
+  /* break-tackle battles only on running plays: never on a pass play (no
+     sacks, no receivers after the catch), kicks or returns */
+  if (G.playKind !== 'scrim' || !OFF_PLAYS[G.offPlay] || OFF_PLAYS[G.offPlay].kind !== 'run') return false;
   /* two of them on him at once isn't a wrestling match, it's a tackle */
   /* another free defender right there too: that's just a tackle */
   if (G.players.some(o => o !== d && o.side === d.side && !o.down && o.stun <= 0 && !(o.engagedT > 0) &&
