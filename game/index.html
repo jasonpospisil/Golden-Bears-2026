@@ -295,7 +295,6 @@
       </div>
       <div class="row">
         <button class="btn ghost" id="goIntro">Team intro</button>
-        <button class="btn ghost" id="goLineup">Set lineup</button>
         <button class="btn ghost" id="goRoster">Depth chart</button>
         <button class="btn ghost" id="goHelp">How to play</button>
       </div>
@@ -343,7 +342,7 @@
       <div class="card" id="mAway"></div>
       <div class="row">
         <button class="btn" id="kickoffBtn">Kickoff</button>
-        <button class="btn ghost" id="mLineup">Set lineup</button>
+        <button class="btn ghost" id="mLineup">Depth chart</button>
         <button class="btn ghost" id="mIntro">Intro: on</button>
         <button class="btn ghost" id="mBack">Back</button>
       </div>
@@ -5531,8 +5530,8 @@ function lineupNote(){
     : 'Saved as you pick.';
 }
 function openLineup(from){ lineupBack = from; buildLineup(); show('lineup'); }
-$('goLineup').addEventListener('click', ()=>openLineup('title'));
-$('mLineup').addEventListener('click', ()=>openLineup('matchup'));
+/* the depth chart is the one place to set the lineup, from the title screen or the matchup */
+$('mLineup').addEventListener('click', ()=>{ lineupBack = 'matchup'; buildRosterTable(); show('roster'); });
 $('lineupDone').addEventListener('click', ()=>{
   if (lineupBack === 'matchup') show('matchup');
   else show('title');
@@ -5646,7 +5645,7 @@ $('mBack').addEventListener('click', ()=>{
   if (pending && pending.mode==='season'){ buildSeason(); show('season'); }
   else { buildTeamGrid(); show('select'); }
 });
-$('goRoster').addEventListener('click', ()=>{ buildRosterTable(); show('roster'); });
+$('goRoster').addEventListener('click', ()=>{ lineupBack = 'title'; buildRosterTable(); show('roster'); });
 $('goHelp').addEventListener('click', ()=>show('help'));
 $('helpBack').addEventListener('click', ()=>show('title'));
 $('backTitle').addEventListener('click', ()=>show('title'));
