@@ -496,7 +496,7 @@ const TEAM_PLAYERS = [
   {num:5, name:'HENRY L.'},
   {num:6, name:'KADEN T.'},
   {num:7, name:'NOAH E.'},
-  {num:7, name:'LIAM P.'},
+  {num:17, name:'LIAM P.'},
   {num:8, name:'BRYCE B.'},
   {num:9, name:'HUNTER B.'},
   {num:10, name:'EVAN K.'},
@@ -5496,7 +5496,8 @@ const SKILL_SLOTS = [
 let lineupBack = 'title';
 function buildLineup(){
   const box = $('lineupList');
-  const opts = TEAM_PLAYERS.map((pl,k)=>`<option value="${k}">#${pl.num} ${pl.name}</option>`).join('');
+  const opts = TEAM_PLAYERS.map((pl,k)=>[pl,k]).sort((x,y)=>x[0].num - y[0].num)
+    .map(([pl,k])=>`<option value="${k}">#${pl.num} ${pl.name}</option>`).join('');   /* jersey order */
   box.innerHTML = '';
   SKILL_SLOTS.forEach(sl=>{
     const row = document.createElement('div');
@@ -5619,7 +5620,8 @@ function rosterCard(i){
 function fullSquad(){
   const spot = {};
   gbRoster.forEach(e=>{ spot[e.pid] = e.pos; });
-  return TEAM_PLAYERS.map((pl,k)=>({ num:pl.num, name:pl.name, pos:spot[k] || '' }));
+  return TEAM_PLAYERS.map((pl,k)=>({ num:pl.num, name:pl.name, pos:spot[k] || '' }))
+                     .sort((a,b)=>a.num - b.num);          /* parade in jersey order */
 }
 $('goIntro').addEventListener('click', ()=>{
   unlockSpeech();
@@ -5699,7 +5701,8 @@ function newGame(oppIdx, home, mode){
 /* roster editor */
 function buildRosterTable(){
   const t = $('rosterTable');
-  const opts = TEAM_PLAYERS.map((pl,k)=>`<option value="${k}">#${pl.num} ${pl.name}</option>`).join('');
+  const opts = TEAM_PLAYERS.map((pl,k)=>[pl,k]).sort((x,y)=>x[0].num - y[0].num)
+    .map(([pl,k])=>`<option value="${k}">#${pl.num} ${pl.name}</option>`).join('');   /* jersey order */
   t.innerHTML = '<thead><tr><th>Pos</th><th></th><th style="text-align:left">Player</th><th>Spd</th><th>Pow</th><th>Hnd</th></tr></thead>';
   const tb = document.createElement('tbody');
   gbRoster.forEach((p,i)=>{
