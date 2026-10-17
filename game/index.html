@@ -5615,7 +5615,7 @@ $('kickoffBtn').addEventListener('click', ()=>{
   const head = pending.mode === 'season'
     ? `WEEK ${pending.week} ${pending.home ? 'VS' : 'AT'} ${them.name}`
     : `${pending.home ? 'VS' : 'AT'} ${them.name}`;
-  playIntro([0,1,2,3,4,5].map(rosterCard), head, 'STARTING LINEUP', head, go);
+  playIntro(fullSquad(), head, 'THE WHOLE SQUAD', head, go);     /* every Bear gets introduced */
 });
 $('mBack').addEventListener('click', ()=>{
   if (pending && pending.mode==='season'){ buildSeason(); show('season'); }
