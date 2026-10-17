@@ -531,7 +531,7 @@ const TEAM_PLAYERS = [
    same first name, then he keeps his last initial (EVAN D. / EVAN K.).
    The full "FIRST L." stays on as a key that portraits and lineups use. */
 /* what a kid actually goes by, when it isn't his first name */
-const NICKNAMES = { 'DOMENICO C.': 'D.J.', 'MAXIMUS M.': 'MOOSE', 'JACOB G.': 'JAKE' };
+const NICKNAMES = { 'DOMENICO C.': 'D.J.', 'MAXIMUS M.': 'MOOSE', 'JACOB G.': 'JAKE', 'BENJAMIN H.': 'BEN' };
 (function(){
   const first = n => n.split(' ')[0];
   const count = {};
@@ -594,7 +594,7 @@ function portraitOf(name){
   }
   return portraitCache[name];
 }
-function hasPortrait(name){ return !!PORTRAITS[name]; }
+function hasPortrait(name){ return !!PORTRAITS[keyOfName(name)]; }   /* nicknames (Jake, Moose, D.J.) too */
 
 /* The defense calls its tackles RT and LT, same as ours; inside the game
    they are DRT / DLT so the two never collide. */
@@ -5479,7 +5479,7 @@ addEventListener('keydown', e=>{ if ((e.key==='Enter'||e.key===' ') && $('splash
 
 function thumbHTML(name){
   return hasPortrait(name)
-    ? `<img class="th" alt="" src="${PORTRAITS[name]}">`
+    ? `<img class="th" alt="" src="${PORTRAITS[keyOfName(name)]}">`
     : `<span class="th empty" aria-hidden="true">?</span>`;
 }
 
