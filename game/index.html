@@ -4558,8 +4558,8 @@ function drawHUD(){
 /* ===================================================== TD celebration
    A rear-view cutscene: the scorer runs in with his number on his back,
    jumps twice with both arms up, two teammates run in for high fives,
-   then all three jump under confetti. Any key or tap skips it.        */
-const CEL = { t:0, total:4.1, team:0, scorer:null, how:'', mates:[], conf:[], slaps:[], fired:{} };
+   then all three hit the griddy under confetti and finish with the goggles. Any key or tap skips it.        */
+const CEL = { t:0, total:5.6, team:0, scorer:null, how:'', mates:[], conf:[], slaps:[], fired:{} };
 const CEL_FOOT = 336, CEL_MATE_FOOT = 304, CEL_X = W/2, CEL_MATE_DX = 91;
 
 let noiseBuf = null;
@@ -4643,7 +4643,15 @@ function backViewParts(arms, legs){
       add(x-0.5, -1.9 - lift, 4.6, 1.9, 'w');
     }
   };
-  if (legs === 'tuck'){ leg(-6.2, 0, true); leg(2.6, 0, true); }
+  /* the griddy: one heel kicked up behind him (from behind you see the sole) */
+  const heel = (x) => {
+    add(x, -9, 3.6, 2.6, 'p');
+    add(x-0.2, -7, 4, 1.4, 'k');
+    add(x-0.6, -6.2, 4.8, 2, 'w');
+  };
+  if (legs === 'heelL'){ heel(-5); leg(1.4, 0, false); }
+  else if (legs === 'heelR'){ leg(-5, 0, false); heel(1.4); }
+  else if (legs === 'tuck'){ leg(-6.2, 0, true); leg(2.6, 0, true); }
   else if (legs === 'run1'){ leg(-5, 2.6, false); leg(1.4, 0, false); }
   else if (legs === 'run2'){ leg(-5, 0, false); leg(1.4, 2.6, false); }
   else { leg(-5, 0, false); leg(1.4, 0, false); }
@@ -4669,10 +4677,18 @@ function backViewParts(arms, legs){
     const sx = s * 7.8, sy = -19.5;
     if (kind === 'up')   armLine(sx, sy, s*7.3, -33);
     else if (kind === 'five') armLine(sx, sy, s*13.5, -31);
+    else if (kind === 'pump') armLine(sx, sy, s*5.2, -25.5);      /* griddy: fist swung up in front */
+    else if (kind === 'swing') armLine(sx, sy, s*12.2, -12.5);    /* griddy: arm swung back and out */
+    else if (kind === 'goggle') armLine(sx, sy, s*4.6, -27.5);    /* hands up at the face mask */
     else armLine(sx, sy, s*9.3, -11.6);
   };
-  arm(-1, arms === 'up' ? 'up' : arms === 'fiveL' ? 'five' : 'down');
-  arm( 1, arms === 'up' ? 'up' : arms === 'fiveR' ? 'five' : 'down');
+  const kindL = arms === 'up' ? 'up' : arms === 'fiveL' ? 'five' : arms === 'gridL' ? 'swing' : arms === 'gridR' ? 'pump' : arms === 'goggles' ? 'goggle' : 'down';
+  const kindR = arms === 'up' ? 'up' : arms === 'fiveR' ? 'five' : arms === 'gridL' ? 'pump' : arms === 'gridR' ? 'swing' : arms === 'goggles' ? 'goggle' : 'down';
+  arm(-1, kindL);
+  arm( 1, kindR);
+  if (arms === 'goggles'){                      /* thumb-and-finger rings around the eyes */
+    add(-6.4, -30.6, 3, 1, 'g'); add(3.4, -30.6, 3, 1, 'g');
+  }
   return P;
 }
 
@@ -4728,8 +4744,17 @@ function scorerPose(t){
   if (t < 2.10) return { arms:'down', legs:'stand', air:0 };
   if (t < 2.36) return { arms:'fiveR', legs:'stand', air:0 };
   if (t < 2.45) return { arms:'down', legs:'stand', air:0 };
-  if (t < 3.35) return jump(2.45);
-  return { arms:'up', legs:'stand', air:0 };
+  if (t < GRIDDY_END) return griddyPose(t, 2.45);
+  return { arms:'goggles', legs:'stand', air:0 };
+}
+/* the griddy: hop from foot to foot kicking the other heel up behind,
+   arms pumping opposite, then the goggles to finish */
+const GRIDDY_BEAT = 0.24, GRIDDY_END = 4.95;
+function griddyPose(t, t0){
+  const k = (t - t0) / GRIDDY_BEAT, n = Math.floor(k), ph = k - n;
+  const right = n % 2 === 1;
+  return { arms: right ? 'gridR' : 'gridL', legs: right ? 'heelR' : 'heelL',
+           air: Math.sin(Math.PI * ph) * 5, dx: (right ? 1 : -1) * 3 };
 }
 function matePose(t, side){
   const tIn = side < 0 ? 1.20 : 1.60, tFive = side < 0 ? 1.74 : 2.10;
@@ -4743,11 +4768,8 @@ function matePose(t, side){
   }
   if (t < tFive + 0.26) return { x:home, arms:five, legs:'stand', air:0 };
   if (t < 2.45) return { x:home, arms:'down', legs:'stand', air:0 };
-  if (t < 3.35){
-    const lt = (t - 2.45 + (side<0 ? 0.08 : 0.16)) % 0.45, a = Math.sin(Math.PI * lt / 0.45);
-    return { x:home, arms:'up', legs: a > 0.18 ? 'tuck':'stand', air:a*26 };
-  }
-  return { x:home, arms:'up', legs:'stand', air:0 };
+  if (t < GRIDDY_END) return Object.assign(griddyPose(t, 2.45), { x:home });   /* in step with him */
+  return { x:home, arms:'goggles', legs:'stand', air:0 };
 }
 
 function drawCrowd(t){
@@ -4805,11 +4827,11 @@ function renderCelebration(){
   /* teammates first — they stand a step behind him */
   for (const side of [-1, 1]){
     const m = matePose(t, side);
-    if (m) drawBackView(m.x, CEL_MATE_FOOT - m.air, 3, CEL.team, CEL.mates[side<0?0:1].num, m.arms, m.legs, m.air);
+    if (m) drawBackView(m.x + (m.dx || 0)*0.75, CEL_MATE_FOOT - m.air, 3, CEL.team, CEL.mates[side<0?0:1].num, m.arms, m.legs, m.air);
   }
   const sp = scorerPose(t);
   const foot = CEL_FOOT - sp.air + (sp.enter ? sp.enter*70 : 0);
-  drawBackView(CEL_X, foot, 4, CEL.team, CEL.scorer.num, sp.arms, sp.legs, sp.air);
+  drawBackView(CEL_X + (sp.dx || 0), foot, 4, CEL.team, CEL.scorer.num, sp.arms, sp.legs, sp.air);
 
   /* high-five bursts */
   for (const sl of CEL.slaps){
