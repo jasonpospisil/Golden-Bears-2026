@@ -1779,7 +1779,11 @@ function stKickoff(st, b, dt){
     st.cov.forEach(p => stMove(p, p.x - 200, p.y, speedOf(p)*0.55*k, dt));
     if (k >= 1){
       beep(150,.08,'square',.07);
-      const P = st.locked, dist = (36 + P*22) * st.leg;      /* a big kick lands inside the 10 */
+      /* a full-power kick carries to the back of the end zone; less power
+         falls short, and a weaker leg loses a little more */
+      const P = st.locked, toBack = (st.K0x - (GOAL_L - 9*PPY)) / PPY;
+      const legAdj = 0.9 + 0.1 * clamp((st.leg - 0.8) / 0.4, 0, 1);
+      const dist = P >= 0.97 ? toBack : toBack * (0.42 + 0.58*P) * legAdj;
       const tx = st.K0x - dist*PPY, ty = 150 + rnd(-45, 45);
       st.flight = { sx:b.x, sy:b.y, tx, ty, dur: 2.0 + P*0.6, peak: 90 + P*30 };
       st.stage = 'flight'; st.t = 0;
