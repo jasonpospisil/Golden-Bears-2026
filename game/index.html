@@ -192,6 +192,34 @@
   #roster input:not(.nm){width:3.4em;padding:6px 2px}
   #roster select{min-width:9em}
   @media (max-height:520px){ #roster .sub, #lineup .sub{display:none} #roster h2, #lineup h2{font-size:10px} #roster .btn, #lineup .btn{padding:9px 12px} }
+
+  /* playbook + designer */
+  #book.on, #designer.on{position:fixed;inset:0;z-index:40;justify-content:flex-start;background:#0d0b07;gap:10px;
+    padding:max(10px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right))
+            max(10px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left))}
+  .bookSlots{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;width:min(720px,100%)}
+  .bslot{display:flex;flex-direction:column;gap:5px;font-size:clamp(6px,1.2vw,9px);color:var(--gold)}
+  .bslot .play{cursor:default}
+  .bslot select, .dzForm select{font-family:var(--pixel);font-size:clamp(7px,1.3vw,10px);padding:7px 4px;width:100%;
+    background:#0e0c07;color:var(--chalk);border:2px solid #4a3f28}
+  .myPlays{width:min(720px,100%);display:flex;flex-direction:column;gap:6px}
+  .mp{display:flex;align-items:center;gap:8px;padding:6px 8px;border:2px solid #3a3223;background:#171309;
+      font-size:clamp(6px,1.2vw,9px);text-align:left;line-height:1.6}
+  .mp .k{color:#8d846c;width:3.4em;flex:0 0 3.4em}
+  .mp .n{color:#ff5aa8;flex:0 0 auto}
+  .mp .d{color:#8d846c;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mp .btn{padding:7px 9px;font-size:clamp(6px,1.1vw,8px)}
+  .mp.none{justify-content:center;color:#8d846c}
+  .dz{display:flex;gap:14px;width:min(720px,100%);align-items:flex-start;justify-content:center;flex-wrap:wrap}
+  .dzPrev{flex:0 0 min(240px,40%);display:flex;flex-direction:column;gap:8px}
+  .dzPrev .play{cursor:default}
+  .dzName{font-size:clamp(6px,1.2vw,9px);color:var(--gold);display:flex;flex-direction:column;gap:5px;text-align:left}
+  .dzName input{font-size:clamp(8px,1.5vw,11px);padding:8px 6px;text-transform:uppercase;width:100%;box-sizing:border-box}
+  .dzForm{flex:1 1 260px;display:grid;grid-template-columns:auto 1fr;gap:7px 10px;align-items:center;text-align:left;
+          font-size:clamp(6px,1.2vw,9px);color:var(--gold)}
+  .dzForm .hd{grid-column:1/-1;color:#8d846c}
+  @media (max-height:520px){ #book .sub:first-of-type{display:none} #book h2, #designer h2{font-size:10px}
+    #book .btn, #designer .btn{padding:9px 12px} .dz{flex-wrap:nowrap} .dzForm{gap:5px 8px} .dzForm select{padding:5px 4px} }
   table{border-collapse:collapse;width:100%;font-size:clamp(5px,1.1vw,9px)}
   th{position:sticky;top:0;background:#241e14;color:var(--gold);padding:6px 4px;font-weight:400;z-index:1}
   td{padding:2px 3px;border-top:1px solid #241e14;text-align:center}
@@ -296,6 +324,7 @@
       <div class="row">
         <button class="btn ghost" id="goIntro">Team intro</button>
         <button class="btn ghost" id="goRoster">Depth chart</button>
+        <button class="btn ghost" id="goBook">Playbook</button>
         <button class="btn ghost" id="goHelp">How to play</button>
       </div>
     </div>
@@ -343,6 +372,7 @@
       <div class="row">
         <button class="btn" id="kickoffBtn">Kickoff</button>
         <button class="btn ghost" id="mLineup">Depth chart</button>
+        <button class="btn ghost" id="mBook">Playbook</button>
         <button class="btn ghost" id="mIntro">Intro: on</button>
         <button class="btn ghost" id="mBack">Back</button>
       </div>
@@ -391,6 +421,37 @@
       <p class="sub" id="rosterMsg"></p>
     </div>
 
+    <!-- playbook -->
+    <div class="screen" id="book">
+      <h2>My playbook</h2>
+      <p class="sub">Pick the 4 plays you call: 2 runs and 2 passes. Saved on this phone.</p>
+      <div class="bookSlots" id="bookSlots"></div>
+      <div class="myPlays" id="myPlays"></div>
+      <div class="row">
+        <button class="btn" id="newRun">+ New run</button>
+        <button class="btn" id="newPass">+ New pass</button>
+        <button class="btn ghost" id="bookBack">Done</button>
+      </div>
+      <p class="sub" id="bookMsg"></p>
+    </div>
+
+    <!-- play designer -->
+    <div class="screen" id="designer">
+      <h2 id="dzTitle">New play</h2>
+      <div class="dz">
+        <div class="dzPrev">
+          <div class="play" id="dzCard"></div>
+          <label class="dzName">Name <input id="dzName" maxlength="12" autocomplete="off" spellcheck="false"></label>
+        </div>
+        <div class="dzForm" id="dzForm"></div>
+      </div>
+      <p class="sub" id="dzMsg"></p>
+      <div class="row">
+        <button class="btn" id="dzSave">Save play</button>
+        <button class="btn ghost" id="dzCancel">Cancel</button>
+      </div>
+    </div>
+
     <!-- help -->
     <div class="screen" id="help">
       <h2>How to play</h2>
@@ -400,7 +461,8 @@
         Defense: tap a player (or B) to pick your man. A is turbo; B switches during the play.<br>
         Grabbed on a running play? TAP TAP TAP as fast as you can to break the tackle.<br>
         Kicking or punting? Once the ball is in the air, B (or tap a player) picks your cover man &mdash; run him down the field.<br><br>
-        Each side picks one of four plays. Guess their play right on defense and your guys blow it up.
+        Each side picks one of four plays. Guess their play right on defense and your guys blow it up.<br>
+        Playbook: design your own runs (who carries it, which hole, who leads) and passes (pick a route for each receiver), then choose your 2 runs and 2 passes.
       </p>
       <button class="btn" id="helpBack">Back</button>
     </div>
@@ -739,6 +801,114 @@ const OFF_PLAYS = [
   { name:'PASS 1', kind:'pass', tag:'X POST, Z GO' },
   { name:'PASS 2', kind:'pass', tag:'X POST, RB4 CROSS'     }
 ];
+OFF_PLAYS.forEach((pl, i) => { pl.builtin = i; pl.id = 'b' + i; });
+
+/* ===================================================== playbook
+   The Bears' four calls come from your playbook: two runs and two passes,
+   picked from the built-in plays plus any you design. The other teams
+   always run the built-in four. Saved on this device. */
+const RUN_HOLES = [
+  { id:'swL', name:'Sweep left',    y:58,  depth:30 },
+  { id:'h1',  name:'RB4 / LT gap',  y:95,  depth:38 },
+  { id:'h2',  name:'LT / LG gap',   y:118, depth:38 },
+  { id:'h3',  name:'LG / C gap',    y:139, depth:38 },
+  { id:'h4',  name:'C / RG gap',    y:161, depth:38 },
+  { id:'h5',  name:'RG / RT gap',   y:182, depth:38 },
+  { id:'swR', name:'Sweep right',   y:228, depth:30 }
+];
+const RUN_CARRIERS = [ ['RB2','RB2'], ['RB3','RB3'], ['RB4','RB4 (wing)'], ['QB','QB keeper'] ];
+const RUN_LINE = [ ['man','Man (each takes his guy)'], ['double','Double-team at the hole'], ['pull','Pull a guard through the hole'] ];
+/* routes as [downfield, toward-the-middle] steps; mirrored for each side */
+const ROUTES = {
+  block:  { name:'Block' },
+  go:     { name:'Go',     pts:[[720,0]] },
+  slant:  { name:'Slant',  pts:[[40,0],[300,140]] },
+  post:   { name:'Post',   pts:[[110,0],[400,130]] },
+  corner: { name:'Corner', pts:[[110,0],[350,-110]], hold:true },
+  out:    { name:'Out',    pts:[[150,0],[150,-110]], hold:true },
+  in:     { name:'In (dig)', pts:[[160,0],[170,190]] },
+  curl:   { name:'Curl',   pts:[[170,0],[140,18]], hold:true },
+  hitch:  { name:'Hitch',  pts:[[80,0],[66,0]], hold:true },
+  drag:   { name:'Drag',   pts:[[30,20],[70,230]] },
+  swing:  { name:'Swing',  pts:[[8,-72],[112,-74]] },
+  wheel:  { name:'Wheel',  pts:[[8,-80],[60,-92],[520,-92]] },
+  angle:  { name:'Angle',  pts:[[30,-40],[150,40]] }
+};
+const PASS_SLOTS = [ ['X','X (wide, top)'], ['Z','Z (wide, bottom)'], ['RB4','RB4 (wing)'], ['RB3','RB3'], ['RB2','RB2'] ];
+const PLAYS_KEY = 'gb26.plays.v1', BOOK_KEY = 'gb26.book.v1';
+let customPlays = [];
+let userBook = ['b0','b1','b2','b3'];          /* run, run, pass, pass */
+try {
+  const cp = JSON.parse(localStorage.getItem(PLAYS_KEY) || '[]');
+  if (Array.isArray(cp)) customPlays = cp.filter(p => p && p.id && (p.kind === 'run' || p.kind === 'pass'));
+  const bk = JSON.parse(localStorage.getItem(BOOK_KEY) || 'null');
+  if (Array.isArray(bk) && bk.length === 4) userBook = bk;
+} catch(e){}
+function savePlaybook(){
+  try { localStorage.setItem(PLAYS_KEY, JSON.stringify(customPlays)); localStorage.setItem(BOOK_KEY, JSON.stringify(userBook)); return true; }
+  catch(e){ return false; }
+}
+function escapeHTML(t){ return String(t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function playById(id){ return OFF_PLAYS.find(p => p.id === id) || customPlays.find(p => p.id === id) || null; }
+function userPlays(){
+  return userBook.map((id, i) => {
+    const pl = playById(id);
+    return pl && pl.kind === (i < 2 ? 'run' : 'pass') ? pl : OFF_PLAYS[i];
+  });
+}
+/* the four calls for whoever has the ball */
+function OFFB(){ return G.offIsUser ? userPlays() : OFF_PLAYS; }
+function holeById(id){ return RUN_HOLES.find(h => h.id === id) || RUN_HOLES[1]; }
+function describePlay(pl){
+  if (pl.builtin != null) return pl.tag;
+  if (pl.kind === 'run'){
+    const c = (RUN_CARRIERS.find(c => c[0] === pl.carrier) || ['RB2'])[0];
+    return `${c} ${holeById(pl.hole).name.replace(' gap','')}`.toUpperCase() + (pl.lead && pl.lead !== 'none' ? `, ${pl.lead} LEADS` : '');
+  }
+  return PASS_SLOTS.filter(([k]) => pl.routes && pl.routes[k] && pl.routes[k] !== 'block')
+                   .map(([k]) => `${k} ${ROUTES[pl.routes[k]].name.split(' ')[0]}`).join(', ').toUpperCase();
+}
+/* start spots of everyone in the formation, field units (relative dx, y) */
+const FORM = { QB:[-48,150], RB2:[-74,174], RB3:[-74,126], X:[-6,24], Z:[-6,262], RB4:[-18,82],
+               OL:[[-8,108],[-11,129],[-8,150],[-11,171],[-8,192]] };
+function routePts(slot, key){
+  const r = ROUTES[key]; if (!r || !r.pts) return null;
+  const y = FORM[slot][1], inward = y < 150 ? 1 : -1;
+  return r.pts.map(([dx, dy]) => [dx, dy * inward]);
+}
+/* a play card drawn from a design (same look as the built-in cards) */
+function customArt(pl){
+  const ax = fy => 6 + (fy - 24) * 0.4286, ay = dx => Math.max(3, 38 - dx * 0.11);
+  const dot  = (x,y,f)=>`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.6" fill="${f||'#f2f4ec'}" stroke="#0d0b07" stroke-width="1"/>`;
+  const path = (pts,c)=>`<path d="M${pts.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L')}" stroke="${c||'#ff5aa8'}" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+  const head = (x,y)=>`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.4" fill="#ff5aa8"/>`;
+  const turf = `<rect x="0" y="0" width="120" height="72" fill="#2f8340"/>` +
+               [0,24,48].map(y=>`<rect x="0" y="${y+12}" width="120" height="12" fill="#2a7335"/>`).join('') +
+               `<path d="M0 44 H120" stroke="#f2f4ec" stroke-width="1.4" opacity=".75"/>`;
+  const pos = k => [ax(FORM[k][1]), k === 'QB' ? 52 : (k === 'RB2' || k === 'RB3') ? 64 : k === 'RB4' ? 46 : 38];
+  let body = FORM.OL.map(([,y]) => dot(ax(y), 38, '#cfc7b2')).join('');
+  const who = pl.kind === 'run' ? [pl.carrier, pl.lead] : PASS_SLOTS.map(s => s[0]).filter(k => pl.routes && pl.routes[k] && pl.routes[k] !== 'block');
+  ['X','Z','RB4','QB','RB3','RB2'].forEach(k => { body += dot(...pos(k), who.includes(k) ? '#f2f4ec' : '#cfc7b2'); });
+  if (pl.kind === 'run'){
+    const h = holeById(pl.hole), hx = ax(h.y);
+    body = `<rect x="${(hx-5).toFixed(1)}" y="34" width="10" height="9" fill="#f5c233" opacity=".28"/>` + body;
+    if (pl.lead && pl.lead !== 'none' && FORM[pl.lead]){ const [lx,ly] = pos(pl.lead); body += path([[lx,ly],[hx,40],[hx,26]], '#cfc7b2'); }
+    if (pl.line === 'pull'){ const g = h.y < 150 ? FORM.OL[3] : FORM.OL[1]; body += path([[ax(g[1]),38],[ax(g[1]),44],[hx,44],[hx,28]], '#cfc7b2'); }
+    const [cx,cy] = pos(pl.carrier || 'RB2');
+    body += path([[cx,cy],[hx,46],[hx,30]]) + head(hx,30);
+  } else {
+    PASS_SLOTS.forEach(([k]) => {
+      const key = pl.routes && pl.routes[k];
+      const [sx0, sy0] = pos(k);
+      if (!key || key === 'block'){ if (k.startsWith('RB')) body += `<path d="M${(sx0-5).toFixed(1)} ${(sy0-6).toFixed(1)} h10" stroke="#cfc7b2" stroke-width="2.2" stroke-linecap="round"/>`; return; }
+      const pts = [[sx0, sy0]].concat(routePts(k, key).map(([dx,dy]) => [clamp(ax(FORM[k][1] + dy), 4, 116), Math.min(sy0, ay(dx + FORM[k][0] + 6))]));
+      body += path(pts) + head(...pts[pts.length-1]);
+    });
+  }
+  return `<svg viewBox="0 0 120 72" role="img" aria-hidden="true">${turf}${body}</svg>`;
+}
+function artFor(pl){ return pl.builtin != null ? playArt(pl.builtin, false) : customArt(pl); }
+
 const DEF_PLAYS = [
   { name:'RUN 1',  kind:'run',  tag:'KEY LT/RB4 GAP' },
   { name:'RUN 2',  kind:'run',  tag:'KEY RG/RT GAP' },
@@ -1082,9 +1252,11 @@ function buildFormation(kind){
   }
 
   /* ---- offense ---- */
-  const isPass = OFF_PLAYS[G.offPlay].kind === 'pass';
-  const holeSpec = OFF_PLAYS[G.offPlay].hole;
+  const spec = OFFB()[G.offPlay];
+  const isPass = spec.kind === 'pass';
+  const holeSpec = spec.builtin != null ? spec.hole : (spec.kind === 'run' ? holeById(spec.hole) : null);
   G.hole = holeSpec ? { x: L + holeSpec.depth, y: holeSpec.y } : null;
+  G.runSpec = spec; G.runLead = null;
   const qb = mk(byPos(oR,'QB'),'off','qb',-48,150,{ai:'qb'});
   /* RB4 wings outside the left tackle, half a step off the line — the gap
      between the two of them is the RUN 1 hole.  RB3 and RB2 set in the
@@ -1102,7 +1274,7 @@ function buildFormation(kind){
   G.off = { qb, rb, fb, x, z, te, ol };
 
   /* routes: [dx,dy] offsets from the player's own start point */
-  const P = G.offPlay;
+  const P = spec.builtin != null ? spec.builtin : -1;     /* -1: a play the kids designed */
   if (P === 2){
     /* PASS 1: X goes up and cuts across the middle; RB4 goes up, out to
        the left sideline and up it; Z runs straight up the right sideline;
@@ -1121,10 +1293,20 @@ function buildFormation(kind){
     z.route  = [[720,0]]; z.hold = false;
     fb.route = [[6,-112],[118,-112]];
     rb.route = null;
+  } else if (P === -1 && isPass){
+    /* a designed pass: each eligible man runs the route he was given, or blocks */
+    const bySlot = { X:x, Z:z, RB4:te, RB3:fb, RB2:rb };
+    G.targets = [];
+    PASS_SLOTS.forEach(([k]) => {
+      const pl = bySlot[k], key = spec.routes && spec.routes[k], pts = key && routePts(k, key);
+      if (pts && G.targets.length < 4){ pl.ai = 'route'; pl.route = pts; pl.hold = !!ROUTES[key].hold; G.targets.push(pl); }
+      else { pl.ai = 'block'; pl.route = null; pl.passBlock = true; }
+    });
   } else {
     x.route = [[40,-10]]; z.route = [[40,10]]; te.route = null;
   }
-  G.targets = (P===2) ? [x,te,rb,z] : (P===3) ? [x,te,fb,z] : [];
+  if (P !== -1) G.targets = (P===2) ? [x,te,rb,z] : (P===3) ? [x,te,fb,z] : [];
+  if (P === 0) G.runLead = fb; else if (P === 1) G.runLead = rb;
 
   /* ---- defense ----
      One base front, lined up on the offense exactly as on the play card:
@@ -1152,7 +1334,7 @@ function buildFormation(kind){
   const fs = mk(byPos(dR,'S'),'def','saf', 200, 150, {ai:'zone', zone:[sDepth, sSide], tag:'S'});
   const tagged = t => G.players.find(p=>p.side==='def' && p.tag===t);
 
-  const sameKind = OFF_PLAYS[G.offPlay].kind === DEF_PLAYS[G.defPlay].kind;
+  const sameKind = OFFB()[G.offPlay].kind === DEF_PLAYS[G.defPlay].kind;
   const react = G.matched ? 0.06 : sameKind ? 0.26 : 0.46;
   const boost = G.matched ? 1.15 : sameKind ? 1.06 : 1.0;
   G.players.forEach(p=>{ if(p.side==='def'){ p.reactT = react; p.boost = boost; } });
@@ -1163,25 +1345,39 @@ function buildFormation(kind){
      side. Right call and they're in the hole untouched. Wrong call and
      they've crashed the wrong gap and have to recover. */
   if (DEF_PLAYS[G.defPlay].kind === 'run'){
-    const keyed = OFF_PLAYS[G.defPlay].hole;
+    const kp = OFFB()[G.defPlay];
+    const keyed = kp.builtin != null ? kp.hole : holeById(kp.hole);
     const pt = { x: L + keyed.depth - 8, y: keyed.y };
-    const crash = G.defPlay === 0 ? ['DRT','RD','RLB'] : ['DLT','NT','LLB'];
+    /* the two down linemen and the backer nearest that hole crash it */
+    const byNear = list => list.slice().sort((a,b) => Math.abs(tagged(a).y - keyed.y) - Math.abs(tagged(b).y - keyed.y));
+    const crash = byNear(['RD','DRT','NT','DLT','LD']).slice(0,2).concat(byNear(['RLB','MLB','LLB']).slice(0,1));
     crash.forEach((t,k)=>{ const d = tagged(t); if (d) d.fill = { x: pt.x - (k<2 ? 8 : 0), y: pt.y }; });
     /* the end on the other side stays home a beat, guarding the cutback */
-    const home = tagged(G.defPlay === 0 ? 'LD' : 'RD');
+    const home = tagged(keyed.y < 150 ? 'LD' : 'RD');
     if (home) home.homeT = 0.75;
   }
 
   G.rushWins = false;
-  if (G.offPlay === 2 || G.offPlay === 3){
+  if (P === 2 || P === 3 || (P === -1 && isPass)){
     /* Man coverage off the play cards.
        PASS 1: RDB on X, RD on RB4, LD on RB2, LDB on Z.
        PASS 2: RDB on X, RLB on RB4, RD on RB3, LDB on Z.
        Read it right and they blanket their men; read it wrong and they
        play soft, and one of them always gets beat. */
-    const man = G.offPlay === 2
-      ? [['DB1', x], ['RD', te], ['LD', rb], ['DB2', z]]
-      : [['DB1', x], ['RLB', te], ['RD', fb], ['DB2', z]];
+    let man;
+    if (P === 2) man = [['DB1', x], ['RD', te], ['LD', rb], ['DB2', z]];
+    else if (P === 3) man = [['DB1', x], ['RLB', te], ['RD', fb], ['DB2', z]];
+    else {
+      /* a designed pass: the corners take the wideouts, then the nearest
+         backer or end picks up each other man running a route */
+      const pool = ['RLB','RD','LD','MLB','LLB'];
+      man = [];
+      for (const r of G.targets){
+        let t = r === x ? 'DB1' : r === z ? 'DB2' : null;
+        if (!t){ pool.sort((a,b) => Math.abs(tagged(a).y - r.y) - Math.abs(tagged(b).y - r.y)); t = pool.shift(); }
+        if (t) man.push([t, r]);
+      }
+    }
     const cov = man.map(([t, r]) => {
       const d = tagged(t); d.ai = 'cover'; d.cover = r; d.fill = null; return d;
     });
@@ -1209,7 +1405,19 @@ function buildFormation(kind){
     }
   }
 
-  if (isPass && G.offPlay === 3){
+  if (isPass && P === -1){
+    /* designed pass protection: the line and any man told to block pick up
+       the rushers and backers who aren't in coverage, nearest first */
+    const covering = new Set(G.players.filter(d => d.side === 'def' && d.ai === 'cover').map(d => d.tag));
+    const threats = ['DRT','NT','DLT','RD','LD','RLB','MLB','LLB'].filter(t => !covering.has(t)).map(tagged).filter(Boolean);
+    const blockers = ol.concat([te, fb, rb, x, z].filter(p => p.passBlock));
+    blockers.forEach(b => {
+      if (!threats.length) return;
+      threats.sort((a,c) => Math.abs(a.y - b.y) - Math.abs(c.y - b.y));
+      b.ai = 'block'; b.assign = threats.shift();
+      if (!G.matched) b.hold = 2.2;
+    });
+  } else if (isPass && P === 3){
     /* PASS 2 protection: the line takes the three down linemen and the two
        backers who aren't covering; RB2 stays in on the LD */
     ol[0].assign = tagged('DRT'); ol[1].assign = tagged('MLB'); ol[2].assign = tagged('NT');
@@ -1217,7 +1425,7 @@ function buildFormation(kind){
     rb.ai = 'block'; rb.assign = tagged('LD');
     fb.ai = 'route';
     if (!G.matched){ ol.forEach(b=>{ b.hold = 2.2; }); rb.hold = 2.2; }
-  } else if (isPass && G.offPlay === 2){
+  } else if (isPass && P === 2){
     /* PASS 1 protection: five linemen and RB3 against the three down
        linemen and three backers. RB2 releases on his swing route. */
     ol[0].assign = tagged('DRT'); ol[1].assign = tagged('RLB'); ol[2].assign = tagged('NT');
@@ -1231,7 +1439,51 @@ function buildFormation(kind){
     rb.ai='block'; rb.assign = tagged('MLB');
     fb.ai='block'; fb.assign = tagged('RLB');
   }
-  if (!isPass){
+  if (!isPass && P === -1){
+    /* a designed run */
+    x.ai = 'block'; x.route = null; x.assign = tagged('DB1'); x.hold = 0.45;
+    z.ai = 'block'; z.route = null; z.assign = tagged('DB2'); z.hold = 0.45;
+    const byName = { RB2:rb, RB3:fb, RB4:te, QB:qb };
+    const carrier = byName[spec.carrier] || rb;
+    const lead = spec.lead && spec.lead !== 'none' && byName[spec.lead] !== carrier ? byName[spec.lead] : null;
+    const hy = G.hole.y, near = d => Math.abs(d.y - hy);
+    const front = ['RD','DRT','NT','DLT','LD'].map(tagged).filter(Boolean);
+    const backers = ['RLB','MLB','LLB'].map(tagged).filter(Boolean);
+    /* the line: each man takes the defender nearest him; the ones at the point of attack hold */
+    let line = ol.slice();
+    if (spec.line === 'pull'){
+      const puller = hy < 150 ? ol[3] : ol[1];         /* the backside guard comes around */
+      line = line.filter(b => b !== puller);
+      puller.ai = 'lead'; puller.assign = backers.slice().sort((a,b)=>near(a)-near(b))[0]; puller.hold = 2.6;
+    }
+    const pool = front.concat(backers);
+    if (spec.line === 'double'){
+      const two = line.slice().sort((a,b) => near(a) - near(b)).slice(0, 2);
+      const man = front.slice().sort((a,b) => near(a) - near(b))[0];
+      two.forEach(b => { b.assign = man; b.hold = 3.2; });
+      pool.splice(pool.indexOf(man), 1);
+      line = line.filter(b => !two.includes(b));
+    }
+    line.forEach(b => {
+      pool.sort((a,c) => Math.abs(a.y - b.y) - Math.abs(c.y - b.y));
+      b.assign = pool.shift();
+      if (b.assign && near(b.assign) < 40) b.hold = 2.6;
+    });
+    /* the backs and the wing */
+    [rb, fb, te].forEach(p => {
+      if (p === carrier){ p.ai = 'back'; p.route = null; return; }
+      p.route = null;
+      if (p === lead){
+        p.ai = 'lead'; p.assign = backers.slice().sort((a,b)=>near(a)-near(b))[0]; p.hold = 2.6;
+      } else {
+        p.ai = 'block';
+        pool.sort((a,c) => Math.abs(a.y - p.y) - Math.abs(c.y - p.y));
+        p.assign = pool.shift() || null;
+      }
+    });
+    G.runLead = lead;
+  }
+  if (!isPass && P !== -1){
     /* on a run the receivers block the DB lined up over them */
     x.ai = 'block'; x.route = null; x.assign = tagged('DB1'); x.hold = 0.45;
     z.ai = 'block'; z.route = null; z.assign = tagged('DB2'); z.hold = 0.45;
@@ -1322,6 +1574,7 @@ function requestSnap(){
   else G.snapQueued = true;
 }
 function snap(){
+  G.pitchedThisPlay = false;
   G.phase = 'live'; G.snapT = 0; G.pitch = null; G.swT = 0; G.brokenUp = false; G.tackler = null;
   G.grap = null; G.grapN = 0;
   /* shotgun: the ball leaves the grass at the center and flies back to the QB */
@@ -2079,15 +2332,21 @@ function update(dt){
   if (G.phase !== 'live') return;
 
   /* ---- offense AI / control ---- */
-  const isPass = G.playKind==='scrim' && OFF_PLAYS[G.offPlay].kind==='pass';
+  const isPass = G.playKind==='scrim' && OFFB()[G.offPlay].kind==='pass';
 
   /* auto handoff / pitch on runs */
   if (G.playKind==='scrim' && !isPass && !G.handoff && G.snapT > 0.36){
     G.handoff = true;
     /* RUN 1 goes to RB2, RUN 2 goes to RB3 — the QB pitches it to him */
     const qb = G.off.qb;
-    G.carrier = OFF_PLAYS[G.offPlay].carrier === 'fb' ? G.off.fb : G.off.rb;
+    const who = OFFB()[G.offPlay].carrier;          /* built-in: 'rb' / 'fb'; designed: RB2 / RB3 / RB4 / QB */
+    G.carrier = who === 'fb' || who === 'RB3' ? G.off.fb : who === 'RB4' ? G.off.te : who === 'QB' ? qb : G.off.rb;
     G.carrier.ai = 'carry';
+    if (G.carrier === qb){ assignUser(); }          /* QB keeper: no toss, he just tucks it and goes */
+  }
+  if (G.playKind==='scrim' && !isPass && G.handoff && !G.pitch && G.carrier !== G.off.qb && !G.pitchedThisPlay){
+    G.pitchedThisPlay = true;
+    const qb = G.off.qb;
     const dist = Math.hypot(G.carrier.x - qb.x, G.carrier.y - qb.y);
     const dur = clamp(0.2 + dist/260, 0.22, 0.38), c = G.carrier;
     /* where he'll be when it gets there, heading for the hole */
@@ -2305,7 +2564,7 @@ function wantGrapple(c, d, engaged){
   if (engaged || (G.grapN || 0) >= 2 || G.phase !== 'live') return false;
   /* break-tackle battles only on running plays: never on a pass play (no
      sacks, no receivers after the catch), kicks or returns */
-  if (G.playKind !== 'scrim' || !OFF_PLAYS[G.offPlay] || OFF_PLAYS[G.offPlay].kind !== 'run') return false;
+  if (G.playKind !== 'scrim' || !OFFB()[G.offPlay] || OFFB()[G.offPlay].kind !== 'run') return false;
   /* two of them on him at once isn't a wrestling match, it's a tackle */
   /* another free defender right there too: that's just a tackle */
   if (G.players.some(o => o !== d && o.side === d.side && !o.down && o.stun <= 0 && !(o.engagedT > 0) &&
@@ -2511,7 +2770,7 @@ function offenseAI(p, dt, isPass){
   if (p === G.carrier && p.ai==='carry'){
     /* hit the hole and get all the way through it before looking for daylight */
     if (G.hole && p.x < G.hole.x + 16){
-      const lead = G.off && (p === G.off.rb ? G.off.fb : G.off.rb);
+      const lead = G.runLead;
       if (lead && lead.ai === 'lead' && lead.x < losX() - 4 && lead.x > p.x + 6){
         steer(p, lead.x - 13, lead.y + (G.hole.y - lead.y)*0.5, s);   /* stay on his hip */
         return;
@@ -2620,10 +2879,11 @@ function offenseAI(p, dt, isPass){
     return;
   }
   if (p.ai==='back'){
-    if (G.playKind === 'scrim' && G.hole && G.off && OFF_PLAYS[G.offPlay].kind === 'run'){
+    if (G.playKind === 'scrim' && G.hole && G.off && OFFB()[G.offPlay].kind === 'run'){
       /* on a run he leaves at the snap, tucked in behind his lead blocker */
-      const lead = p === G.off.rb ? G.off.fb : G.off.rb;
-      steer(p, lead.x - 15, lead.y + (G.hole.y - lead.y)*0.3, s);
+      const lead = G.runLead;
+      if (lead) steer(p, lead.x - 15, lead.y + (G.hole.y - lead.y)*0.3, s);
+      else steer(p, G.hole.x - 30, p.y + (G.hole.y - p.y)*0.4, s*0.8);   /* no lead man: start toward the hole */
       return;
     }
     p.vx = 0; p.vy = 0; return;
@@ -2725,7 +2985,7 @@ function defenseAI(p, dt){
     steer(p, losX() + p.zone[0], p.zone[1], s*0.85);
     return;
   }
-  const isPass = G.playKind==='scrim' && OFF_PLAYS[G.offPlay].kind==='pass';
+  const isPass = G.playKind==='scrim' && OFFB()[G.offPlay].kind==='pass';
   if (isPass && !G.handoff && c && c.x < losX() && p.zone && G.snapT < 1.6){
     /* drop into the zone before breaking */
     const near = G.players.find(o=>o.side==='off' && o.ai==='route' &&
@@ -2864,7 +3124,7 @@ function tackleCheck(){
         takeDown(c, d);
         sfxHit(); G.shakeT = SHAKE_TIME; puff(c.x, c.y - 8, 'hit');
         const sack = G.playKind === 'scrim' && G.off && c === G.off.qb && !G.target &&
-                     OFF_PLAYS[G.offPlay] && OFF_PLAYS[G.offPlay].kind === 'pass';
+                     OFFB()[G.offPlay] && OFFB()[G.offPlay].kind === 'pass';
         if (sack) crowdCheer(G.offIsUser ? 0 : 0.85);
         endPlay('tackle');
         return;
@@ -2925,7 +3185,7 @@ function startReturn(def, kind){
 /* ------------------------------------------------------------- passing */
 function throwTo(i){
   if (G.phase!=='live' || !G.offIsUser || G.ball) return;
-  if (G.playKind!=='scrim' || OFF_PLAYS[G.offPlay].kind!=='pass') return;
+  if (G.playKind!=='scrim' || OFFB()[G.offPlay].kind!=='pass') return;
   if (ballLoose()) return;                       /* he doesn't have the snap yet */
   const qb = G.off.qb;
   if (G.carrier !== qb || qb.x > losX()+4) return;
@@ -3048,7 +3308,7 @@ function recordPlay(reason, c, tk, isSack, gYds){
   if (G.playKind !== 'scrim' || !G.off) return;
   if (!['tackle','oob','td','safety','incomplete'].includes(reason)) return;
   off.plays++;
-  const qb = G.off.qb, pass = OFF_PLAYS[G.offPlay].kind === 'pass';
+  const qb = G.off.qb, pass = OFFB()[G.offPlay].kind === 'pass';
   const yds = reason === 'incomplete' ? 0 : Math.min(gYds, 100 - G.ballOn);
   const td = reason === 'td' ? 1 : 0;
   if (pass && reason === 'incomplete'){ off.att++; bump(statLine(qb, offU), 'pa'); return; }
@@ -3094,7 +3354,7 @@ function endPlay(reason){
   /* who brought him down */
   const tk = (reason === 'tackle' || reason === 'safety') && G.tackler && c && G.tackler !== c ? G.tackler : null;
   const isSack = !!(tk && G.playKind === 'scrim' && G.off && c === G.off.qb && !G.target &&
-                    OFF_PLAYS[G.offPlay] && OFF_PLAYS[G.offPlay].kind === 'pass');
+                    OFFB()[G.offPlay] && OFFB()[G.offPlay].kind === 'pass');
   G.hlBy = tk ? `${isSack ? 'SACKED' : 'TACKLED'} BY #${tk.num} ${tk.name}` : null;
   G.bannerSub = tk ? `${isSack ? 'SACK' : 'TACKLE'}: #${tk.num} ${tk.name}` : '';
   const userTackle = !!(tk && !G.offIsUser && G.playKind === 'scrim');    /* one of ours made the stop */
@@ -3128,7 +3388,7 @@ function endPlay(reason){
   const HL = (userOff || userTackle ? 700 : 0) + SD;
   const qb = G.off && G.off.qb;
   const byCatch = !!c && G.caught === c;
-  const isPassPlay = G.playKind==='scrim' && OFF_PLAYS[G.offPlay].kind==='pass';
+  const isPassPlay = G.playKind==='scrim' && OFFB()[G.offPlay].kind==='pass';
   const hl = (p, head, detail) => {
     if (userOff && p) showHighlight(p, head, detail, reason==='td');
     else if (userTackle){                                    /* our defender's card */
@@ -3557,7 +3817,7 @@ function showPlayCall(){
   const userCallsOffense = G.offIsUser;
   /* both sides choose from the offense's four plays: on defense it's the
      play you expect them to run and are lining up to stop */
-  const list = OFF_PLAYS;
+  const list = OFFB();
   const us = teamOf(true), them = teamOf(false);
   const away = G.userHome ? them : us, home = G.userHome ? us : them;
   const awayScore = G.userHome ? G.score.cpu : G.score.user;
@@ -3589,8 +3849,8 @@ function showPlayCall(){
   list.forEach((pl,i)=>{
     const b = document.createElement('button');
     b.className = 'play ' + pl.kind;
-    b.innerHTML = `<span class="pn">${pl.name}</span>${playArt(i,false)}` +
-                  `<span class="pd">${pl.tag}</span>`;
+    b.innerHTML = `<span class="pn">${escapeHTML(pl.name)}</span>${artFor(pl)}` +
+                  `<span class="pd">${escapeHTML(describePlay(pl))}</span>`;
     /* pick on finger-up, so a tiny slide of the finger can't cancel the tap;
        click stays as the fallback (mouse, keyboard) */
     let downHere = false;
@@ -5174,7 +5434,7 @@ function drawFooter(){
   ctx.textAlign = 'right'; ctx.fillStyle = '#8d846c';
   if (G.phase==='live' || G.phase==='dead' || G.phase==='presnap'){
     ctx.fillText(G.playKind==='return' ? 'INT RETURN' : G.playKind==='kickoff' ? 'KICKOFF'
-      : (G.offIsUser ? OFF_PLAYS[G.offPlay].name : DEF_PLAYS[G.defPlay].name), W-8, y);
+      : (G.offIsUser ? OFFB()[G.offPlay].name : DEF_PLAYS[G.defPlay].name), W-8, y);
   }
 }
 
@@ -5309,7 +5569,7 @@ function frame(now){
     }
     update(dt);
     if (G.phase==='live' && G.offIsUser && !G.ball && G.off && G.carrier===G.off.qb
-        && OFF_PLAYS[G.offPlay].kind==='pass' && G.playKind==='scrim'){
+        && OFFB()[G.offPlay].kind==='pass' && G.playKind==='scrim'){
       if (!$('recv').classList.contains('on')) recvButtons(G.targets);
     } else if ($('recv').classList.contains('on') && !(G.phase==='live' && G.offIsUser && !G.ball && G.carrier===G.off?.qb)){
       recvButtons(null);
@@ -5322,7 +5582,7 @@ function frame(now){
 }
 
 /* ================================================================ screens */
-const SCREENS = ['splash','title','lineup','season','matchup','select','playcall','fourth','roster','help','pause','conv'];
+const SCREENS = ['splash','title','lineup','season','matchup','select','playcall','fourth','roster','help','pause','conv','book','designer'];
 function hideScreens(){ SCREENS.forEach(s=>$(s).classList.remove('on')); }
 function show(id){ hideScreens(); $(id).classList.add('on'); }
 
@@ -5793,6 +6053,114 @@ $('kickoffBtn').addEventListener('click', ()=>{
 $('mBack').addEventListener('click', ()=>{
   if (pending && pending.mode==='season'){ buildSeason(); show('season'); }
   else { buildTeamGrid(); show('select'); }
+});
+
+/* ===================================================== playbook screens */
+let bookBack = 'title', dzPlay = null;
+function playOptions(kind, sel){
+  const opts = OFF_PLAYS.filter(p => p.kind === kind).concat(customPlays.filter(p => p.kind === kind));
+  return opts.map(p => `<option value="${p.id}"${p.id === sel ? ' selected' : ''}>${escapeHTML(p.name)}${p.builtin != null ? '' : ' *'}</option>`).join('');
+}
+function buildBook(){
+  const ups = userPlays();
+  userBook = ups.map(p => p.id);
+  $('bookSlots').innerHTML = ups.map((pl, i) => {
+    const kind = i < 2 ? 'run' : 'pass';
+    return `<div class="bslot">${kind === 'run' ? 'RUN' : 'PASS'} ${i % 2 + 1}
+      <div class="play"><span class="pn">${escapeHTML(pl.name)}</span>${artFor(pl)}</div>
+      <select data-slot="${i}" aria-label="${kind} ${i % 2 + 1}">${playOptions(kind, pl.id)}</select></div>`;
+  }).join('');
+  $('myPlays').innerHTML = customPlays.length ? customPlays.map(p =>
+    `<div class="mp"><span class="k">${p.kind.toUpperCase()}</span><span class="n">${escapeHTML(p.name)}</span>
+       <span class="d">${escapeHTML(describePlay(p))}</span>
+       <button class="btn ghost" data-edit="${p.id}">Edit</button><button class="btn ghost" data-del="${p.id}">Delete</button></div>`).join('')
+    : `<div class="mp none">No plays of your own yet. Make one!</div>`;
+}
+function openBook(from){ bookBack = from; $('bookMsg').textContent = ''; buildBook(); show('book'); }
+$('goBook').addEventListener('click', () => openBook('title'));
+$('mBook').addEventListener('click', () => openBook('matchup'));
+$('bookBack').addEventListener('click', () => { savePlaybook(); show(bookBack); });
+$('bookSlots').addEventListener('change', e => {
+  const i = +e.target.dataset.slot; if (isNaN(i)) return;
+  userBook[i] = e.target.value; savePlaybook(); buildBook();
+});
+$('myPlays').addEventListener('click', e => {
+  const ed = e.target.dataset.edit, dl = e.target.dataset.del;
+  if (ed){ const p = customPlays.find(q => q.id === ed); if (p) openDesigner(JSON.parse(JSON.stringify(p))); }
+  if (dl){
+    const p = customPlays.find(q => q.id === dl);
+    if (e.target.dataset.armed !== '1'){ e.target.dataset.armed = '1'; e.target.textContent = 'Sure?'; return; }
+    customPlays = customPlays.filter(q => q.id !== dl);
+    userBook = userBook.map((id, i) => id === dl ? 'b' + i : id);
+    savePlaybook(); buildBook();
+    $('bookMsg').textContent = p ? `Deleted ${p.name}.` : '';
+  }
+});
+$('newRun').addEventListener('click', () => openDesigner({ id:null, kind:'run', name:'', carrier:'RB2', hole:'h4', lead:'RB3', line:'man' }));
+$('newPass').addEventListener('click', () => openDesigner({ id:null, kind:'pass', name:'', routes:{ X:'go', Z:'slant', RB4:'curl', RB3:'block', RB2:'block' } }));
+
+function sel(key, opts, val){
+  return `<select data-k="${key}">${opts.map(([v, t]) => `<option value="${v}"${v === val ? ' selected' : ''}>${escapeHTML(t)}</option>`).join('')}</select>`;
+}
+function openDesigner(pl){
+  dzPlay = pl;
+  $('dzTitle').textContent = (pl.id ? 'Edit ' : 'New ') + (pl.kind === 'run' ? 'run play' : 'pass play');
+  $('dzName').value = pl.name || '';
+  $('dzMsg').textContent = '';
+  buildDesigner(); show('designer');
+}
+function buildDesigner(){
+  const pl = dzPlay;
+  let h = '';
+  if (pl.kind === 'run'){
+    if (pl.lead === pl.carrier) pl.lead = 'none';
+    const leads = [['none','No lead blocker']].concat(['RB2','RB3','RB4'].filter(k => k !== pl.carrier).map(k => [k, k + ' leads']));
+    h += `<span>Ball carrier</span>${sel('carrier', RUN_CARRIERS, pl.carrier)}`;
+    h += `<span>Hole</span>${sel('hole', RUN_HOLES.map(o => [o.id, o.name]), pl.hole)}`;
+    h += `<span>Lead block</span>${sel('lead', leads, pl.lead || 'none')}`;
+    h += `<span>Line</span>${sel('line', RUN_LINE, pl.line)}`;
+  } else {
+    h += `<span class="hd">Pick a route for each player (1 to 4 go out, the rest block)</span>`;
+    const opts = Object.entries(ROUTES).map(([k, r]) => [k, r.name]);
+    PASS_SLOTS.forEach(([k, label]) => { h += `<span>${label}</span>${sel('r:' + k, opts, pl.routes[k] || 'block')}`; });
+  }
+  $('dzForm').innerHTML = h;
+  dzPreview();
+}
+function dzPreview(){
+  const nm = ($('dzName').value || '').trim().toUpperCase() || (dzPlay.kind === 'run' ? 'MY RUN' : 'MY PASS');
+  $('dzCard').innerHTML = `<span class="pn">${escapeHTML(nm)}</span>${customArt(dzPlay)}<span class="pd">${escapeHTML(describePlay(dzPlay))}</span>`;
+}
+$('dzForm').addEventListener('change', e => {
+  const k = e.target.dataset.k; if (!k) return;
+  if (k.startsWith('r:')) dzPlay.routes[k.slice(2)] = e.target.value; else dzPlay[k] = e.target.value;
+  if (k === 'carrier') buildDesigner(); else dzPreview();
+  $('dzMsg').textContent = '';
+});
+$('dzName').addEventListener('input', dzPreview);
+$('dzCancel').addEventListener('click', () => { buildBook(); show('book'); });
+$('dzSave').addEventListener('click', () => {
+  const pl = dzPlay;
+  const name = ($('dzName').value || '').trim().toUpperCase().slice(0, 12);
+  if (!name){ $('dzMsg').textContent = 'Give your play a name.'; $('dzName').focus(); return; }
+  if (pl.kind === 'pass'){
+    const out = PASS_SLOTS.filter(([k]) => pl.routes[k] && pl.routes[k] !== 'block').length;
+    if (out < 1){ $('dzMsg').textContent = 'Send at least one receiver out.'; return; }
+    if (out > 4){ $('dzMsg').textContent = 'Only 4 can go out. Someone has to block!'; return; }
+  }
+  pl.name = name;
+  const isNew = !pl.id;
+  if (isNew) pl.id = 'c' + Date.now().toString(36);
+  const i = customPlays.findIndex(q => q.id === pl.id);
+  if (i >= 0) customPlays[i] = pl; else customPlays.push(pl);
+  /* a brand-new play goes straight into the book, in the first slot still holding a built-in */
+  let msg = `Saved ${name}.`;
+  if (isNew){
+    const slots = pl.kind === 'run' ? [0,1] : [2,3];
+    const free = slots.find(s => !customPlays.some(q => q.id === userBook[s]));
+    if (free != null){ userBook[free] = pl.id; msg += ` It's now ${pl.kind.toUpperCase()} ${free % 2 + 1}.`; }
+  }
+  savePlaybook(); buildBook(); $('bookMsg').textContent = msg; show('book');
 });
 $('goRoster').addEventListener('click', ()=>{ lineupBack = 'title'; buildRosterTable(); show('roster'); });
 $('goHelp').addEventListener('click', ()=>show('help'));
