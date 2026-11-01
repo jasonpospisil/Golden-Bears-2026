@@ -2810,13 +2810,55 @@ function offenseAI(p, dt, isPass){
     runRoute(p, s); return;
   }
   if (p.ai==='lead'){
-    if (G.hole){
+    if (G.hole && G.runSpec && G.runSpec.builtin != null){
+      /* the card plays: tuned blocks, he goes straight for his named man */
       const mine = p.assign && p.assign.stun <= 0 && !p.assign.fill ? p.assign : null;
       const foe = mine || nearestFoe(p, 54);
       if (foe && p.x > losX() - 24){
         const seal = (foe.y >= G.hole.y) ? 1 : -1;
         steer(p, foe.x - 4, foe.y - seal*7, s);
       } else steer(p, G.hole.x + 26, G.hole.y, s*1.06);
+      return;
+    }
+    if (G.hole){
+      /* 1) get to the hole and go THROUGH it; only a man standing in the
+            hole is worth hitting on the way.  2) once through, take the
+            linebacker (or whoever's closest ahead) and wall him off. */
+      const hx = G.hole.x, hy = G.hole.y, los = losX();
+      if (!p.leadThru && p.x >= los + 12 && Math.abs(p.y - hy) < 20) p.leadThru = true;
+      if (!p.leadThru && p.x >= hx) p.leadThru = true;
+      if (!p.leadThru){
+        let plug = null, pd = 30;
+        for (const d of G.players){
+          if (d.side !== 'def' || d.stun > 0 || d.down) continue;
+          if (Math.abs(d.y - hy) > 16 || d.x < los - 6 || d.x > los + 50) continue;
+          const dd = Math.hypot(d.x - p.x, d.y - p.y);
+          if (dd < pd){ pd = dd; plug = d; }
+        }
+        if (plug){ steer(p, plug.x - 4, plug.y, s); return; }
+        /* line up on the hole first if he's off to the side, then go */
+        const off = Math.abs(p.y - hy);
+        if (off > 12 && p.x > los - 16) steer(p, Math.min(p.x, los - 12), hy, s*1.06);
+        else steer(p, hx + 18, hy, s*1.06);
+        return;
+      }
+      /* the first man who can get to the hole: his assigned backer if he's
+         anywhere near it, else whoever is closest to the lane ahead */
+      const a = p.assign;
+      let foe = a && a.stun <= 0 && !a.down && !a.fill && Math.abs(a.y - hy) < 40 ? a : null;
+      if (!foe){
+        let bs = 130;
+        const ax = p.x + 26;
+        for (const d of G.players){
+          if (d.side !== 'def' || d.stun > 0 || d.down || d.x < p.x - 16) continue;
+          const dd = Math.hypot(d.x - ax, (d.y - hy)*1.4);
+          if (dd < bs){ bs = dd; foe = d; }
+        }
+      }
+      if (foe){
+        const seal = (foe.y >= hy) ? 1 : -1;
+        steer(p, foe.x - 4, foe.y - seal*7, s);
+      } else steer(p, p.x + 40, hy, s);
       return;
     }
     const c = focusPoint(p);
