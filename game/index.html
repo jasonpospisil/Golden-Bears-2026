@@ -484,7 +484,7 @@ const SLOTS = [
   {pos:'RD'},{pos:'DRT'},{pos:'NT'},{pos:'DLT'},{pos:'LD'},
   {pos:'RLB'},{pos:'MLB'},{pos:'LLB'},
   {pos:'DB'},{pos:'DB'},{pos:'S'},
-  {pos:'K'}
+  {pos:'K'},{pos:'P'},{pos:'PR'},{pos:'KR'}
 ];
 
 /* The 2026 Golden Bears, from the team sheet: first name, last initial. */
@@ -617,7 +617,10 @@ const SLOT_STATS = [
   {pos:'LLB',spd:76, pow:82, hnd:56},
   {pos:'DB', spd:90, pow:58, hnd:70}, {pos:'DB', spd:88, pow:60, hnd:72},
   {pos:'S',  spd:84, pow:70, hnd:68},
-  {pos:'K',  spd:60, pow:80, hnd:50}
+  {pos:'K',  spd:60, pow:80, hnd:50},
+  {pos:'P',  spd:60, pow:80, hnd:50},          /* punter */
+  {pos:'PR', spd:88, pow:62, hnd:80},          /* punt returner */
+  {pos:'KR', spd:90, pow:66, hnd:76}           /* kick returner */
 ];
 
 /* Starting depth chart, one name per slot above (same order). This is a
@@ -629,7 +632,8 @@ const DEFAULT_LINEUP = [
   'CALLAHAN T.','JOHN M.','DOMENICO C.','JACKSON M.','VANDER D.',
   'JAMES C.','CONNOR A.','FINN G.',
   'HENRY L.','KADEN T.','NOAH E.',
-  'BRYCE B.'
+  'BRYCE B.',
+  'BRYCE B.','NOAH E.','RICK H.'               /* punter, punt returner, kick returner */
 ];
 const pidOf = name => Math.max(0, TEAM_PLAYERS.findIndex(p=>p.key===name || p.name===name));
 
@@ -683,7 +687,7 @@ function makeRoster(rate){
   const used = new Set();
   return SLOTS.map((s,i)=>{
     let n; do { n = 1 + ((Math.random()*98)|0); } while(used.has(n)); used.add(n);
-    const skill = ['QB','RB2','X','Z','DB','S'].includes(s.pos);
+    const skill = ['QB','RB2','X','Z','DB','S','PR','KR'].includes(s.pos);
     const big   = ['LT','LG','C','RG','RT','NT','DRT','DLT'].includes(s.pos);
     const base  = rate - 12;
     return {
@@ -703,8 +707,12 @@ try {
                      a.every(e => Number.isInteger(e.pid) && TEAM_PLAYERS[e.pid]);
   const raw = localStorage.getItem(RKEY);
   let saved = raw ? JSON.parse(raw) : null;
-  if (Array.isArray(saved) && saved.length === SLOTS.length - 1)      /* saved before the kicker spot */
-    saved = saved.concat([{ pid: pidOf(DEFAULT_LINEUP[SLOTS.length - 1]) }]);
+  if (Array.isArray(saved) && saved.length === SLOTS.length - 4)      /* saved before the kicker spot */
+    saved = saved.concat([{ pid: pidOf(DEFAULT_LINEUP[SLOTS.length - 4]) }]);
+  /* saved before punter / returners had their own spots: the kicker punted,
+     the safety returned punts and RB2 returned kickoffs */
+  if (Array.isArray(saved) && saved.length === SLOTS.length - 3 && saved.every(e => e && Number.isInteger(e.pid)))
+    saved = saved.concat([{ pid: saved[22].pid }, { pid: saved[21].pid }, { pid: saved[1].pid }]);
   if (saved && valid(saved)){
     gbRoster = saved.map((e,i)=> slotEntry(i, e.pid, e.spd != null ? e : null));
   } else {
@@ -1045,7 +1053,7 @@ function buildFormation(kind){
 
   if (kind === 'kickoff'){
     G.off = null; G.targets = []; G.hole = null;
-    const ret = mk(byPos(oR,'RB2'),'off','carry',-10,150,{ai:'carry'});
+    const ret = mk(byPos(oR,'KR'),'off','carry',-10,150,{ai:'carry'});
     G.carrier = ret;
     /* the full return team: a front wall of five, three in the middle,
        two personal protectors just ahead of the returner */
@@ -1423,12 +1431,12 @@ function doPunt(){
   const blockers = line.map(([ps,y,dx]) => stMk(stPick(kR,ps), 'off', L+dx, y));
   const gunners = [ stMk(stPick(kR,'X'), 'off', L-6, 24), stMk(stPick(kR,'Z'), 'off', L-6, 276) ];
   const protector = stMk(stPick(kR,'RB2'), 'off', L - 80, 150);   /* personal protector */
-  const punter = stMk(stPick(kR,'K'), 'off', Math.max(L - 13*PPY, GOAL_L - 9*PPY), 150);   /* backed up: at the end line */
+  const punter = stMk(stPick(kR,'P'), 'off', Math.max(L - 13*PPY, GOAL_L - 9*PPY), 150);   /* backed up: at the end line */
   const rushT = ['RD','DRT','NT','DLT','LD','RLB','LLB'];
   const rush = rushT.map((ps,i) => stMk(stPick(rR,ps), 'def', L+16, 98 + i*17.3));
   stMk(stPick(rR,'MLB'), 'def', L+64, 150);
   const jam = [ stMk(stPick(rR,'DB',0), 'def', L+14, 24), stMk(stPick(rR,'DB',1), 'def', L+14, 276) ];
-  const returner = stMk(stPick(rR,'S'), 'def', L + 35*PPY, 150);
+  const returner = stMk(stPick(rR,'PR'), 'def', L + 35*PPY, 150);
   stBegin({ kind:'punt', userKicks: G.offIsUser, leg: legOf(punter),
             snapper: blockers[3], punter, kicker: punter, blockers, rush, gunners, jam, returner, protector,
             ball: { x: L - 2, y: 150, z: 3 }, camX: L - 5*PPY });
@@ -1441,7 +1449,7 @@ function startKickoff(fromYd){
   G.ballOn = 0;                                        /* measured from the return team's goal line */
   const yd = v => GOAL_L + v*PPY, K0 = fromYd || 65;  /* 65 = kicking team's 35; 80 = its 20 */
   const rR = rosterOf(G.offIsUser), kR = rosterOf(!G.offIsUser);
-  const ret = stMk(stPick(rR,'RB2'), 'off', yd(5), 150, { ai:'carry' });
+  const ret = stMk(stPick(rR,'KR'), 'off', yd(5), 150, { ai:'carry' });
   const wallT = [['LT',45,46],['LG',45,98],['C',45,150],['RG',45,202],['RT',45,254],
                  ['RB3',30,90],['RB4',30,150],['X',30,210],['Z',15,118],['QB',15,182]];
   const wall = wallT.map(([ps,v,y]) => stMk(stPick(rR,ps), 'off', yd(v), y,
