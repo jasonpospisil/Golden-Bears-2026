@@ -398,7 +398,8 @@
         Move: the thumbstick, or arrow keys / WASD.<br>
         Offense: tap the field to snap. On pass plays, tap a receiver's number to throw.<br>
         Defense: tap a player (or B) to pick your man. A is turbo; B switches during the play.<br>
-        Grabbed on a running play? TAP TAP TAP as fast as you can to break the tackle.<br><br>
+        Grabbed on a running play? TAP TAP TAP as fast as you can to break the tackle.<br>
+        Kicking or punting? Once the ball is in the air, B (or tap a player) picks your cover man &mdash; run him down the field.<br><br>
         Each side picks one of four plays. Guess their play right on defense and your guys blow it up.
       </p>
       <button class="btn" id="helpBack">Back</button>
@@ -1475,12 +1476,64 @@ function stLock(pw){
   st.from = { x: st.kicker.x, y: st.kicker.y };
 }
 function stMove(p, tx, ty, spd, dt){
+  if (p.isUser && G.phase === 'kick') return;          /* you're steering him */
   const dx = tx - p.x, dy = ty - p.y, d = Math.hypot(dx, dy);
   if (d < 2){ p.vx = 0; p.vy = 0; }
   else { const v = Math.min(spd, d/dt); p.vx = dx/d*v; p.vy = dy/d*v; }
   stepPos(p, dt);
 }
-function stHold(p, dt){ p.vx *= 0.7; p.vy *= 0.7; stepPos(p, dt); }
+function stHold(p, dt){ if (p.isUser && G.phase === 'kick') return; p.vx *= 0.7; p.vy *= 0.7; stepPos(p, dt); }
+
+/* ---- covering your own kick or punt: once the ball is in the air you take
+   one of the cover men (B switches, or tap a player), steer him downfield,
+   and you still have him when the return starts */
+function coverMen(st){
+  if (!st || !st.userKicks) return [];
+  if (st.kind === 'kickoff') return st.cov.concat([st.kicker]).filter(Boolean);
+  if (st.kind === 'punt') return [].concat(st.gunners || [], st.blockers || [], [st.protector, st.punter]).filter(Boolean);
+  return [];
+}
+function canPickCover(){
+  const st = G.st;
+  return G.phase === 'kick' && st && st.userKicks && st.stage === 'flight' && coverMen(st).length > 0;
+}
+function setCoverMan(p){
+  if (!p || p === G.userP) return;
+  if (G.userP) G.userP.isUser = false;
+  G.userP = p; p.isUser = true; G.keepUser = true;
+  beep(500,.05,'square',.04);
+}
+function startCover(st){
+  if (!st.userKicks) return;
+  const f = st.flight;
+  const men = st.kind === 'punt' && st.gunners && st.gunners.length ? st.gunners : coverMen(st);   /* on a punt, a gunner */
+  let best = null, bd = 1e9;                         /* start with the man closest to where it's coming down */
+  for (const p of men){ const d = Math.hypot(p.x - f.tx, p.y - f.ty); if (d < bd){ bd = d; best = p; } }
+  G.players.forEach(p => p.isUser = false);
+  G.userP = null; setCoverMan(best);
+}
+function cycleCover(step){
+  const men = coverMen(G.st).slice().sort((a,b) => a.y - b.y);
+  const i = men.indexOf(G.userP);
+  setCoverMan(men[(i + step + men.length) % men.length]);
+}
+function pickCoverAt(e){
+  const r = cv.getBoundingClientRect();
+  const wx = screenToWorldX((e.clientX - r.left) * (W / r.width));
+  const wy = (e.clientY - r.top) * (H / r.height) - FIELD_TOP + 10;
+  let best = null, bd = 34;
+  for (const p of coverMen(G.st)){ const d = Math.hypot(p.x - wx, p.y - wy); if (d < bd){ bd = d; best = p; } }
+  if (best) setCoverMan(best);
+}
+function steerCover(dt){
+  const p = G.userP;
+  if (!p || !p.isUser || !canPickCover()) return;
+  const turbo = readInput();
+  const sp = speedOf(p) * (turbo ? 1.08 : 1);
+  p.vx = inputV.x * sp; p.vy = inputV.y * sp;
+  if (inputV.x || inputV.y) p.face = inputV.x < 0 ? -1 : inputV.x > 0 ? 1 : p.face;
+  stepPos(p, dt);
+}
 
 function stUpdate(dt){
   const st = G.st;
@@ -1578,6 +1631,7 @@ function stStrike(st){
     st.net = net;
     const tx = clamp(losX() + net*PPY, 0, FIELD_W - 8);
     st.flight = { sx:b.x, sy:b.y, tx, ty: 150 + rnd(-45, 45), dur: 1.5 + P*1.0, peak: 70 + P*30 };
+    startCover(st);
     return;
   }
   /* field goal: good, short or wide */
@@ -1729,6 +1783,7 @@ function stKickoff(st, b, dt){
       const tx = st.K0x - dist*PPY, ty = 150 + rnd(-45, 45);
       st.flight = { sx:b.x, sy:b.y, tx, ty, dur: 2.0 + P*0.6, peak: 90 + P*30 };
       st.stage = 'flight'; st.t = 0;
+      startCover(st);
     }
   }
   else if (st.stage === 'flight'){
@@ -1787,12 +1842,13 @@ function assignUser(){
   else {
     /* mid-play (a handoff, a catch) you keep the man you're driving; at
        the line you get the defender you picked last time, if he's out there */
-    const keep = G.phase === 'live' && G.playKind !== 'return' &&
+    const keep = G.phase === 'live' && (G.playKind !== 'return' || G.keepUser) &&
                  prev && prev.side === 'def' && G.players.includes(prev);
     const picked = G.defPick ? G.players.find(p => p.side === 'def' && p.tag === G.defPick) : null;
     G.userP = keep ? prev : (picked || nearestDef());
   }
   if (G.userP) G.userP.isUser = true;
+  G.keepUser = false;
 }
 
 /* choosing your defender: along the line top to bottom, then the backers */
@@ -1924,6 +1980,7 @@ function readInput(){
   return keys[' ']||keys['j']||btnA;
 }
 function pressB(){
+  if (canPickCover()){ cycleCover(1); return; }
   if (G.phase==='presnap' && !G.offIsUser){ cycleDefender(1); return; }
   if (G.phase!=='live') return;
   if (!G.offIsUser) switchDefender();
@@ -2008,7 +2065,7 @@ function update(dt){
   if (G.popT > 0) G.popT -= dt;
   if (G.hlT > 0 && summaryReady()){ G.hlT -= dt; G.hlAge += dt; }
   if (G.phase === 'presnap'){ updatePresnap(dt); return; }
-  if (G.phase === 'kick'){ if (G.bannerT > 0) G.bannerT -= dt; stUpdate(dt); return; }
+  if (G.phase === 'kick'){ if (G.bannerT > 0) G.bannerT -= dt; stUpdate(dt); steerCover(dt); return; }
   if (G.phase !== 'live'){ if (G.bannerT>0 && summaryReady()) G.bannerT -= dt; settlePlayers(dt); return; }
   G.snapT += dt;
   if (!G.conv && !G.ot) G.clock = Math.max(0, G.clock - dt);
@@ -3277,7 +3334,7 @@ cv.addEventListener('pointerdown', (e)=>{
   if (G.grap){ grappleTap(); return; }
   if (G.phase==='stats'){ if (statNextHit(e)) nextStatPage(); return; }
   if (G.phase==='intro') endIntro();
-  else if (G.phase==='kick') kickInput();
+  else if (G.phase==='kick'){ if (canPickCover()) pickCoverAt(e); else kickInput(); }
   else if (!G.offIsUser && (G.phase==='presnap' || G.phase==='live')) pickDefenderAt(e);
   else requestSnap();
 });
