@@ -199,7 +199,8 @@
             max(10px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left))}
   .bookSlots{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;width:min(720px,100%)}
   .bslot{display:flex;flex-direction:column;gap:5px;font-size:clamp(6px,1.2vw,9px);color:var(--gold)}
-  .bslot .play{cursor:default}
+  .bslot .play{cursor:pointer}
+  .bslot .play *{pointer-events:none}
   .bslot select, .dzForm select{font-family:var(--pixel);font-size:clamp(7px,1.3vw,10px);padding:7px 4px;width:100%;
     background:#0e0c07;color:var(--chalk);border:2px solid #4a3f28}
   .myPlays{width:min(720px,100%);display:flex;flex-direction:column;gap:6px}
@@ -424,7 +425,7 @@
     <!-- playbook -->
     <div class="screen" id="book">
       <h2>My playbook</h2>
-      <p class="sub">Pick the 4 plays you call: 2 runs and 2 passes. Saved on this device.</p>
+      <p class="sub">Pick the 4 plays you call: 2 runs and 2 passes. Tap a card to test it. Saved on this device.</p>
       <div class="bookSlots" id="bookSlots"></div>
       <div class="myPlays" id="myPlays"></div>
       <div class="row">
@@ -448,6 +449,7 @@
       <p class="sub" id="dzMsg"></p>
       <div class="row">
         <button class="btn" id="dzSave">Save play</button>
+        <button class="btn ghost" id="dzTest">Test play</button>
         <button class="btn ghost" id="dzCancel">Cancel</button>
       </div>
     </div>
@@ -857,7 +859,12 @@ function userPlays(){
   });
 }
 /* the four calls for whoever has the ball */
-function OFFB(){ return G.offIsUser ? userPlays() : OFF_PLAYS; }
+function OFFB(){
+  if (G.practice && G.offIsUser){                 /* a test run: the play goes in its own slot */
+    const b = OFF_PLAYS.slice(); b[G.practice.slot] = G.practice.pl; return b;
+  }
+  return G.offIsUser ? userPlays() : OFF_PLAYS;
+}
 function holeById(id){ return RUN_HOLES.find(h => h.id === id) || RUN_HOLES[1]; }
 function describePlay(pl){
   if (pl.builtin != null) return pl.tag;
@@ -3153,6 +3160,7 @@ function boundsCheck(){
    and the offense that just threw it has to chase him down. G.dir = -1
    means the ball carrier is heading for the left end zone.            */
 function startReturn(def, kind){
+  if (G.practice && (kind || 'int') === 'int'){ endPlay('int'); return; }   /* a test ends at the pick */
   if ((kind || 'int') === 'int') recordPick(def);
   if ((kind || 'int') === 'int'){
     if (G.conv){ G.brokenUp = false; endPlay('incomplete'); return; }   /* try's over */
@@ -3359,6 +3367,7 @@ function endPlay(reason){
   G.bannerSub = tk ? `${isSack ? 'SACK' : 'TACKLE'}: #${tk.num} ${tk.name}` : '';
   const userTackle = !!(tk && !G.offIsUser && G.playKind === 'scrim');    /* one of ours made the stop */
   const gYds = c ? Math.round((bx - losX()) / PPY) : 0;
+  if (G.practice){ practiceResult(reason, c, isSack, gYds); return; }
   recordPlay(reason, c, tk, isSack, gYds);
   /* a 2-point try is one play: in the end zone or no good */
   if (G.conv){
@@ -5830,7 +5839,10 @@ $('btnShake').addEventListener('click', ()=>{
   $('btnShake').textContent = 'Screen shake: ' + (shakeOn ? 'on' : 'off');
 $('mIntro').textContent = 'Intro: ' + (introBeforeGames ? 'on' : 'off');
 });
-$('quit').addEventListener('click', ()=>{ hushSpeech(); stopMusic(); G.phase='menu'; G.paused=false; pads(false); show('title'); });
+$('quit').addEventListener('click', ()=>{
+  hushSpeech(); stopMusic();
+  if (G.practice){ const back = G.practice.back; endPractice(); if (back === 'designer') show('designer'); else { buildBook(); show('book'); } return; }
+  G.phase='menu'; G.paused=false; pads(false); show('title'); });
 
 /* play select -> home. A stray tap shouldn't end a game, so the first tap
    arms it and the second one (within a few seconds) leaves. */
@@ -6067,13 +6079,13 @@ function buildBook(){
   $('bookSlots').innerHTML = ups.map((pl, i) => {
     const kind = i < 2 ? 'run' : 'pass';
     return `<div class="bslot">${kind === 'run' ? 'RUN' : 'PASS'} ${i % 2 + 1}
-      <div class="play"><span class="pn">${escapeHTML(pl.name)}</span>${artFor(pl)}</div>
+      <div class="play" data-test="${pl.id}" role="button" tabindex="0" title="Test this play"><span class="pn">${escapeHTML(pl.name)}</span>${artFor(pl)}</div>
       <select data-slot="${i}" aria-label="${kind} ${i % 2 + 1}">${playOptions(kind, pl.id)}</select></div>`;
   }).join('');
   $('myPlays').innerHTML = customPlays.length ? customPlays.map(p =>
     `<div class="mp"><span class="k">${p.kind.toUpperCase()}</span><span class="n">${escapeHTML(p.name)}</span>
        <span class="d">${escapeHTML(describePlay(p))}</span>
-       <button class="btn ghost" data-edit="${p.id}">Edit</button><button class="btn ghost" data-del="${p.id}">Delete</button></div>`).join('')
+       <button class="btn ghost" data-test="${p.id}">Test</button><button class="btn ghost" data-edit="${p.id}">Edit</button><button class="btn ghost" data-del="${p.id}">Delete</button></div>`).join('')
     : `<div class="mp none">No plays of your own yet. Make one!</div>`;
 }
 function openBook(from){ bookBack = from; $('bookMsg').textContent = ''; buildBook(); show('book'); }
@@ -6084,8 +6096,13 @@ $('bookSlots').addEventListener('change', e => {
   const i = +e.target.dataset.slot; if (isNaN(i)) return;
   userBook[i] = e.target.value; savePlaybook(); buildBook();
 });
+$('bookSlots').addEventListener('click', e => {
+  const id = e.target.dataset.test; const p = id && playById(id);
+  if (p) startPractice(p, 'book');
+});
 $('myPlays').addEventListener('click', e => {
-  const ed = e.target.dataset.edit, dl = e.target.dataset.del;
+  const ed = e.target.dataset.edit, dl = e.target.dataset.del, ts = e.target.dataset.test;
+  if (ts){ const p = playById(ts); if (p) startPractice(p, 'book'); return; }
   if (ed){ const p = customPlays.find(q => q.id === ed); if (p) openDesigner(JSON.parse(JSON.stringify(p))); }
   if (dl){
     const p = customPlays.find(q => q.id === dl);
@@ -6138,6 +6155,68 @@ $('dzForm').addEventListener('change', e => {
   $('dzMsg').textContent = '';
 });
 $('dzName').addEventListener('input', dzPreview);
+$('dzTest').addEventListener('click', () => {
+  const pl = dzPlay;
+  if (pl.kind === 'pass'){
+    const out = PASS_SLOTS.filter(([k]) => pl.routes[k] && pl.routes[k] !== 'block').length;
+    if (out < 1){ $('dzMsg').textContent = 'Send at least one receiver out.'; return; }
+    if (out > 4){ $('dzMsg').textContent = 'Only 4 can go out. Someone has to block!'; return; }
+  }
+  const t = JSON.parse(JSON.stringify(pl));
+  t.name = ($('dzName').value || '').trim().toUpperCase().slice(0, 12) || (pl.kind === 'run' ? 'MY RUN' : 'MY PASS');
+  startPractice(t, 'designer');
+});
+
+/* ----------------------------------------------- test a play
+   One snap from your own 35 against a regular defense that hasn't
+   guessed your call, then straight back to the playbook. */
+function startPractice(pl, back){
+  hushSpeech(); stopMusic();
+  const opp = TEAMS.findIndex((t, i) => i !== G.userTeam && !t.coaches);
+  const slot = pl.builtin != null ? pl.builtin : pl.kind === 'run' ? 0 : 2;
+  G.practice = { pl, back, opp, slot };
+  G.stats = freshStats(); G.statView = null;
+  G.offHist = []; G.defHist = [];
+  G.cpuTeam = opp; G.mode = 'practice'; G.userHome = true;
+  cpuRoster = makeRoster(TEAMS[opp].rate + DIFF().rate);
+  for (const ti of [G.userTeam, G.cpuTeam])
+    for (let f=0; f<=F_DIVE; f++){ getSprite(ti,f,true); getSprite(ti,f,false); }
+  G.qIdx = 0; G.clock = G.qLen; G.score = {user:0, cpu:0};
+  G.down = 1; G.toGo = 10; G.ballOn = 35;
+  G.offIsUser = true; G.conv = false; G.ot = null; G.otPlayed = false;
+  G.paused = false; G.banner = ''; G.bannerT = 0; G.grap = null; G.chainYd = null; G.refSig = null;
+  G.openKick = false; G.pendingKickoff = null;
+  G.offPlay = slot;
+  const others = [0,1,2,3].filter(i => i !== slot);
+  G.defPlay = others[(Math.random() * others.length) | 0];
+  try { AC = AC || new (window.AudioContext||window.webkitAudioContext)(); } catch(e){}
+  hideScreens();
+  startPlay();
+}
+function practiceResult(reason, c, isSack, yds){
+  const pr = G.practice;
+  const ln = n => `${Math.abs(n)} ${Math.abs(n) === 1 ? 'YARD' : 'YARDS'}`;
+  let head;
+  if (reason === 'td'){ head = 'TOUCHDOWN!'; sfxTD(); G.flashT = 0.6; }
+  else if (reason === 'int') head = 'INTERCEPTED';
+  else if (reason === 'incomplete') head = 'INCOMPLETE';
+  else if (isSack) head = `SACKED, LOSS OF ${ln(yds)}`;
+  else head = yds > 0 ? `GAIN OF ${ln(yds)}` : yds < 0 ? `LOSS OF ${ln(yds)}` : 'NO GAIN';
+  const who = c && reason !== 'incomplete' && reason !== 'int' && !isSack ? ` (#${c.num} ${c.name})` : '';
+  G.banner = head; G.bannerT = 1.8;
+  const msg = `Test of ${pr.pl.name}: ${head.charAt(0) + head.slice(1).toLowerCase()}${who}. Defense guessed ${DEF_PLAYS[G.defPlay].name}.`;
+  setTimeout(() => {
+    if (G.practice !== pr) return;
+    endPractice();
+    if (pr.back === 'designer'){ show('designer'); $('dzMsg').textContent = msg; }
+    else { buildBook(); show('book'); $('bookMsg').textContent = msg; }
+  }, 2000 + Math.round((G.sumDelay || 0) * 1000));
+}
+function endPractice(){
+  G.practice = null; G.mode = 'single';
+  G.phase = 'menu'; G.paused = false; G.banner = ''; G.bannerT = 0;
+  hushSpeech(); pads(false); recvButtons(null);
+}
 $('dzCancel').addEventListener('click', () => { buildBook(); show('book'); });
 $('dzSave').addEventListener('click', () => {
   const pl = dzPlay;
@@ -6190,6 +6269,7 @@ function buildTeamGrid(){
 }
 
 function newGame(oppIdx, home, mode){
+  G.practice = null;
   G.stats = freshStats(); G.statView = null;
   G.offHist = []; G.defHist = [];          /* a fresh game: the computer hasn't seen you yet */
   G.cpuTeam = oppIdx;
