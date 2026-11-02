@@ -1461,13 +1461,13 @@ function buildFormation(kind){
     if (spec.line === 'pull'){
       const puller = hy < 150 ? ol[3] : ol[1];         /* the backside guard comes around */
       line = line.filter(b => b !== puller);
-      puller.ai = 'lead'; puller.assign = backers.slice().sort((a,b)=>near(a)-near(b))[0]; puller.hold = 2.6;
+      puller.ai = 'lead'; puller.assign = backers.slice().sort((a,b)=>near(a)-near(b))[0]; puller.hold = 1.7;
     }
     const pool = front.concat(backers);
     if (spec.line === 'double'){
       const two = line.slice().sort((a,b) => near(a) - near(b)).slice(0, 2);
       const man = front.slice().sort((a,b) => near(a) - near(b))[0];
-      two.forEach(b => { b.assign = man; b.hold = 3.2; });
+      two.forEach(b => { b.assign = man; b.hold = 2.4; });
       pool.splice(pool.indexOf(man), 1);
       line = line.filter(b => !two.includes(b));
     }
@@ -1487,17 +1487,18 @@ function buildFormation(kind){
       }
       b.assign = pick;
       if (pick){ const k = pool.indexOf(pick); if (k >= 0) pool.splice(k, 1); const j = dlLeft.indexOf(pick); if (j >= 0) dlLeft.splice(j, 1); }
-      if (b.assign && near(b.assign) < 40) b.hold = 2.6;
+      if (b.assign && near(b.assign) < 40) b.hold = 1.25;
     });
     /* the backs and the wing */
     [rb, fb, te].forEach(p => {
       if (p === carrier){ p.ai = 'back'; p.route = null; return; }
       p.route = null;
       if (p === lead){
-        p.ai = 'lead'; p.assign = backers.slice().sort((a,b)=>near(a)-near(b))[0]; p.hold = 2.6;
+        p.ai = 'lead'; p.assign = backers.slice().sort((a,b)=>near(a)-near(b))[0]; p.hold = 1.7;
       } else {
         p.ai = 'block';
-        pool.sort((a,c) => Math.abs(a.y - p.y) - Math.abs(c.y - p.y));
+        /* the extra blocker takes whoever's left that can fill the hole */
+        pool.sort((a,c) => near(a) - near(c));
         p.assign = pool.shift() || null;
       }
     });
@@ -1510,7 +1511,8 @@ function buildFormation(kind){
     /* receivers are weak blockers: they get in the way, then the DB sheds */
   }
   if (isPass){ /* handled above */ }
-  else if (G.offPlay === 0){
+  else if (P === -1){ /* a designed run: handled above */ }
+  else if (P === 0){
     /* RUN 1, off the play card: RB4 takes the RD, the LT takes the
        defensive RT, and RB3 leads through the hole onto the RLB. Those
        three blocks hold, and the hole opens for RB2 right behind RB3. */
@@ -2869,7 +2871,8 @@ function offenseAI(p, dt, isPass){
                                                                Math.hypot(o.x - d.x, o.y - d.y) < 17);
       const threat = d => Math.hypot(d.x - aimX, (d.y - aimY) * 1.2) + 0.45 * Math.hypot(d.x - p.x, d.y - p.y)
                          + (c ? 0.5 * Math.hypot(d.x - c.x, d.y - c.y) : 0);
-      const ok = d => d && d.side === 'def' && d.stun <= 0 && !d.down && d.x > Math.min(p.x, c ? c.x : p.x) - 22;
+      const ok = d => d && d.side === 'def' && d.stun <= 0 && !d.down && d.x > Math.min(p.x, c ? c.x : p.x) - 22
+                     && d.x < los + 95;          /* the safety is his own problem */
       let foe = ok(p.leadFoe) && !taken(p.leadFoe) ? p.leadFoe : null;
       let locked = foe && Math.hypot(foe.x - p.x, foe.y - p.y) < 18;
       /* he's walled his man off out of the play: peel off for a free man going for the runner */
@@ -3130,6 +3133,7 @@ function stepKnocked(p, dt){
   if (p.stun <= 0.04){ p.down = null; p.stun = 0; p.vx = p.vy = 0; }
 }
 
+const HOLE_HALF = 26;          /* half the width of the lane a designed run opens */
 function resolveBlocks(dt){
   for (const b of G.players){
     if (b.side!=='off') continue;
@@ -3165,6 +3169,16 @@ function resolveBlocks(dt){
         const pushA = Math.atan2(d.y-b.y, d.x-b.x);
         const force = clamp((b.pow - d.pow)*0.5 + 14, 2, 34) * (G.matched ? 1 : (b.hold || 1));
         d.x += Math.cos(pushA)*force*dt; d.y += Math.sin(pushA)*force*dt;
+        /* a designed run: the men at the point of attack get driven sideways,
+           OFF the hole, so a lane opens up you can see and hit */
+        if (G.hole && !G.matched && G.playKind === 'scrim' && G.runSpec && G.runSpec.kind === 'run' && G.runSpec.builtin == null){
+          const off = d.y - G.hole.y, los = losX();
+          if (Math.abs(off) < HOLE_HALF && d.x < los + 46 && d.x > los - 40){
+            const side = off === 0 ? (b.y < d.y ? 1 : -1) : Math.sign(off);
+            d.y += side * 85 * dt;
+            d.x += (d.x > los + 4 ? -10 : 0) * dt;
+          }
+        }
         /* shed */
         d.shedT = (d.shedT||0) + dt * (0.6 + (d.pow-b.pow)*0.01) * (d.blitz ? 1.7 : 1) * (d.isUser && !G.offIsUser ? 1.6 : 1)
                   * (G.matched ? 3.2 : 1) / (G.matched ? Math.min(1, b.hold || 1) : (b.hold || 1));
@@ -4774,6 +4788,18 @@ function drawField(){
   post(Math.round(sx(GOAL_R + 10*PPY)) - 3, 1);
   post(Math.round(sx(GOAL_L - 10*PPY)), -1);
 
+  /* your run: mark the hole at the line until the runner gets there */
+  const holeOn = G.hole && G.offIsUser && G.playKind === 'scrim' &&
+                 (G.phase === 'presnap' || (G.phase === 'live' && G.snapT < 1.8 && G.carrier && G.carrier.x < losX() + 10 &&
+                                            OFFB()[G.offPlay] && OFFB()[G.offPlay].kind === 'run'));
+  if (holeOn){
+    const a = G.phase === 'live' ? clamp((1.8 - G.snapT) / 0.6, 0, 1) : 1;
+    const lx = Math.round(sx(losX())), hy = FIELD_TOP + Math.round(G.hole.y);
+    ctx.fillStyle = `rgba(245,194,51,${(0.22*a).toFixed(3)})`;
+    ctx.fillRect(lx - 30, hy - 9, 60, 18);                       /* the lane */
+    ctx.fillStyle = `rgba(245,194,51,${(0.85*a).toFixed(3)})`;
+    ctx.fillRect(lx - 30, hy - 10, 60, 2); ctx.fillRect(lx - 30, hy + 8, 60, 2);
+  }
   if (G.phase==='presnap' && G.hole && G.offIsUser){
     const hx = Math.round(sx(G.hole.x)), hy = FIELD_TOP + Math.round(G.hole.y);
     ctx.fillStyle = 'rgba(245,194,51,.8)';
