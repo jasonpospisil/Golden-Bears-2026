@@ -1471,9 +1471,22 @@ function buildFormation(kind){
       pool.splice(pool.indexOf(man), 1);
       line = line.filter(b => !two.includes(b));
     }
-    line.forEach(b => {
-      pool.sort((a,c) => Math.abs(a.y - b.y) - Math.abs(c.y - b.y));
-      b.assign = pool.shift();
+    /* linemen block the down linemen first (nearest first, so nobody
+       across from the hole walks in free), then the extras climb to backers */
+    const dlLeft = pool.filter(d => front.includes(d));
+    const byGap = line.slice().sort((a,b) => near(a) - near(b));
+    byGap.forEach(b => {
+      /* a down lineman in front of him; if there isn't one, climb to a backer
+         (let the backside end go: he's chasing from behind) */
+      dlLeft.sort((a,c) => Math.abs(a.y - b.y) - Math.abs(c.y - b.y));
+      let pick = dlLeft.length && Math.abs(dlLeft[0].y - b.y) < 34 ? dlLeft.shift() : null;
+      if (!pick){
+        const lbs = pool.filter(d => !front.includes(d));
+        lbs.sort((a,c) => (Math.abs(a.y - b.y) + 0.5*near(a)) - (Math.abs(c.y - b.y) + 0.5*near(c)));
+        pick = lbs[0] || dlLeft.shift() || null;
+      }
+      b.assign = pick;
+      if (pick){ const k = pool.indexOf(pick); if (k >= 0) pool.splice(k, 1); const j = dlLeft.indexOf(pick); if (j >= 0) dlLeft.splice(j, 1); }
       if (b.assign && near(b.assign) < 40) b.hold = 2.6;
     });
     /* the backs and the wing */
@@ -2827,11 +2840,16 @@ function offenseAI(p, dt, isPass){
       const hx = G.hole.x, hy = G.hole.y, los = losX();
       if (!p.leadThru && p.x >= los + 12 && Math.abs(p.y - hy) < 20) p.leadThru = true;
       if (!p.leadThru && p.x >= hx) p.leadThru = true;
+      /* the runner has caught him (or beaten him to the corner): forget the
+         hole and go get the man closing on the runner */
+      const rc = G.carrier;
+      if (!p.leadThru && rc && rc !== p && rc.ai === 'carry' && rc.x > p.x + 2) p.leadThru = true;
       if (!p.leadThru){
         let plug = null, pd = 30;
         for (const d of G.players){
           if (d.side !== 'def' || d.stun > 0 || d.down) continue;
-          if (Math.abs(d.y - hy) > 16 || d.x < los - 6 || d.x > los + 50) continue;
+          if (Math.abs(d.y - hy) > 22 || d.x < los - 34 || d.x > los + 50) continue;
+          if (d.engagedT > 0 && G.players.some(o => o !== p && o.side === 'off' && !o.down && o !== G.carrier && Math.hypot(o.x - d.x, o.y - d.y) < 17)) continue;
           const dd = Math.hypot(d.x - p.x, d.y - p.y);
           if (dd < pd){ pd = dd; plug = d; }
         }
@@ -2842,19 +2860,36 @@ function offenseAI(p, dt, isPass){
         else steer(p, hx + 18, hy, s*1.06);
         return;
       }
-      /* the first man who can get to the hole: his assigned backer if he's
-         anywhere near it, else whoever is closest to the lane ahead */
-      const a = p.assign;
-      let foe = a && a.stun <= 0 && !a.down && !a.fill && Math.abs(a.y - hy) < 40 ? a : null;
-      if (!foe){
-        let bs = 130;
-        const ax = p.x + 26;
-        for (const d of G.players){
-          if (d.side !== 'def' || d.stun > 0 || d.down || d.x < p.x - 16) continue;
-          const dd = Math.hypot(d.x - ax, (d.y - hy)*1.4);
-          if (dd < bs){ bs = dd; foe = d; }
-        }
+      /* through the hole: take the most dangerous man nobody has blocked —
+         the one closest to the runner's path ahead. Stay on him once
+         engaged; switch only if he's down, taken, or a much bigger threat shows up. */
+      const c = G.carrier && G.carrier !== p ? G.carrier : null;
+      const aimX = Math.max(p.x, c ? c.x : p.x) + 34, aimY = c ? (c.y + hy) / 2 : hy;
+      const taken = d => d.engagedT > 0 && G.players.some(o => o !== p && o.side === 'off' && !o.down && o !== G.carrier &&
+                                                               Math.hypot(o.x - d.x, o.y - d.y) < 17);
+      const threat = d => Math.hypot(d.x - aimX, (d.y - aimY) * 1.2) + 0.45 * Math.hypot(d.x - p.x, d.y - p.y)
+                         + (c ? 0.5 * Math.hypot(d.x - c.x, d.y - c.y) : 0);
+      const ok = d => d && d.side === 'def' && d.stun <= 0 && !d.down && d.x > Math.min(p.x, c ? c.x : p.x) - 22;
+      let foe = ok(p.leadFoe) && !taken(p.leadFoe) ? p.leadFoe : null;
+      let locked = foe && Math.hypot(foe.x - p.x, foe.y - p.y) < 18;
+      /* he's walled his man off out of the play: peel off for a free man going for the runner */
+      if (locked && c && Math.hypot(foe.x - c.x, foe.y - c.y) > 42) locked = false;
+      /* a free man is right on the runner and closer than his: go get that one */
+      if (locked && c){
+        const fc = Math.hypot(foe.x - c.x, foe.y - c.y);
+        if (G.players.some(d => ok(d) && d !== foe && !taken(d) && Math.hypot(d.x - p.x, d.y - p.y) < 46 &&
+                                Math.hypot(d.x - c.x, d.y - c.y) < Math.min(34, fc - 8))) locked = false;
       }
+      if (!locked){
+        let best = null, bs = 170;
+        for (const d of G.players){
+          if (!ok(d) || taken(d)) continue;
+          const t = threat(d);
+          if (t < bs){ bs = t; best = d; }
+        }
+        if (!foe || (best && best !== foe && bs < threat(foe) - 25)) foe = best;
+      }
+      p.leadFoe = foe;
       if (foe){
         const seal = (foe.y >= hy) ? 1 : -1;
         steer(p, foe.x - 4, foe.y - seal*7, s);
