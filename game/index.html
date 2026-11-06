@@ -6412,7 +6412,10 @@ function startPractice(pl, back){
   G.paused = false; G.banner = ''; G.bannerT = 0; G.grap = null; G.chainYd = null; G.refSig = null;
   G.openKick = false; G.pendingKickoff = null;
   G.offPlay = slot;
-  const others = [0,1,2,3].filter(i => i !== slot);
+  /* a test never gets read: the defense always guesses the other kind of
+     play (pass against your run, run against your pass), so it's your play
+     against a defense that isn't keyed on it. Reads are for real games. */
+  const others = [0,1,2,3].filter(i => DEF_PLAYS[i].kind !== pl.kind);
   G.defPlay = others[(Math.random() * others.length) | 0];
   try { AC = AC || new (window.AudioContext||window.webkitAudioContext)(); } catch(e){}
   hideScreens();
@@ -6429,7 +6432,7 @@ function practiceResult(reason, c, isSack, yds){
   else head = yds > 0 ? `GAIN OF ${ln(yds)}` : yds < 0 ? `LOSS OF ${ln(yds)}` : 'NO GAIN';
   const who = c && reason !== 'incomplete' && reason !== 'int' && !isSack ? ` (#${c.num} ${c.name})` : '';
   G.banner = head; G.bannerT = 1.8;
-  const msg = `Test of ${pr.pl.name}: ${head.charAt(0) + head.slice(1).toLowerCase()}${who}. Defense guessed ${DEF_PLAYS[G.defPlay].name}.`;
+  const msg = `Test of ${pr.pl.name}: ${head.charAt(0) + head.slice(1).toLowerCase()}${who}.`;
   setTimeout(() => {
     if (G.practice !== pr) return;
     endPractice();
