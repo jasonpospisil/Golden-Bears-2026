@@ -416,12 +416,12 @@
     <!-- roster -->
     <div class="screen" id="roster">
       <h2>Golden Bears depth chart</h2>
-      <p class="sub">Pick who starts at each spot. Ratings go with the position, not the player.</p>
+      <p class="sub">Pick who starts at each spot. Ratings go with the position, not the player. Changes save automatically.</p>
       <div class="tablewrap"><table id="rosterTable"></table></div>
       <div class="row">
-        <button class="btn" id="saveRoster">Save roster</button>
+        <button class="btn" id="rosterBack">Done</button>
         <button class="btn ghost" id="resetRoster">Reset depth chart</button>
-        <button class="btn ghost" id="rosterBack">Back</button>
+        <button class="btn ghost" id="saveRoster" hidden>Save roster</button>
       </div>
       <p class="sub" id="benchLine"></p>
       <p class="sub" id="rosterMsg"></p>
@@ -6366,6 +6366,7 @@ $('goHelp').addEventListener('click', ()=>show('help'));
 $('helpBack').addEventListener('click', ()=>show('title'));
 $('backTitle').addEventListener('click', ()=>show('title'));
 $('rosterBack').addEventListener('click', ()=>{
+  saveRoster();
   if (lineupBack === 'matchup') show('matchup'); else show('title');
 });
 
@@ -6446,6 +6447,11 @@ function buildRosterTable(){
     }
     else gbRoster[i][k] = clamp(+el.value||0, 40, 99);
     updateBench();
+    /* every change saves right away: no button to forget */
+    if (e.type === 'change' || k === 'pid'){
+      $('rosterMsg').textContent = saveRoster() ? 'Saved on this device.'
+        : 'This browser blocked local storage, so the roster lasts until you close the tab.';
+    }
   };
   t.addEventListener('input', onEdit);
   t.addEventListener('change', onEdit);
