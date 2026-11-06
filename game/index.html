@@ -525,13 +525,18 @@ const COACH_SCALE = 2;
 function vsCoaches(){ return G.cpuTeam === COACH_IDX; }
 /* is this man one of the coaches? (same side test the drawing uses) */
 function isCoach(p){ return !!p && vsCoaches() && ((p.side === 'off') !== G.offIsUser); }
-const COACH_NAMES = ['BIG','SLOW','TIRED','CREAKY','DAD','POPS','SNACKS','NAPPY','GRUMPY','ACHY','OLD',
-                     'WHEEZY','SORE','LUNCH','CLIPBOARD','WHISTLE','COFFEE','RECLINER','HAMMY','KNEES','BACKS','MOM'];
+/* the real Golden Bears coaching staff (and the team mom). Eleven of them,
+   so the offense is all eleven and so is the defense, shuffled each game. */
+const COACH_NAMES = ['COACH JASON J','COACH JASON P','COACH CHRIS','COACH TIM','COACH TOMMY','COACH BEN',
+                     'COACH LARRY','COACH JIM','COACH JEFF','COACH BRIAN','TEAM MOM'];
 function makeCoachRoster(){
-  const used = new Set(), names = COACH_NAMES.slice().sort(()=>Math.random()-0.5);
+  const used = new Set();
+  const shuffled = () => COACH_NAMES.slice().sort(() => Math.random() - 0.5);
+  const off = shuffled(), def = shuffled(), st = shuffled();
   return SLOTS.map((s,i)=>{
     let n; do { n = 40 + ((Math.random()*59)|0); } while(used.has(n)); used.add(n);
-    return { num:n, name:'COACH ' + names[i % names.length], pos:s.pos,
+    const name = i < 11 ? off[i] : i < 22 ? def[i - 11] : st[i - 22];
+    return { num:n, name, pos:s.pos,
              spd: Math.round(rnd(82,92)), pow: Math.round(rnd(95,99)), hnd: Math.round(rnd(75,88)) };
   });
 }
