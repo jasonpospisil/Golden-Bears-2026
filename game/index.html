@@ -106,8 +106,10 @@
   .diff button{font-family:inherit;font-size:clamp(7px,1.25vw,9px);padding:8px 11px;background:transparent;
     color:#b9b29c;border:2px solid #4a3f28;cursor:pointer;letter-spacing:1px}
   .diff button.on{color:#0d0b07;background:#f5c233;border-color:#f5c233}
-  .diffnote{min-height:1em}
-  @media (max-height:420px){ .diffnote{display:none} }
+  .diffbox{display:flex;flex-direction:column;align-items:center;gap:6px}
+  .difflabel{font-size:clamp(6px,1.1vw,8px);color:#f5c233;letter-spacing:2px}
+  .diffnote{min-height:1em;font-size:clamp(6px,1.1vw,8px);color:#b9b29c;line-height:1.5;max-width:92vw}
+  @media (max-height:420px){ .diffbox{gap:4px} }
   .pchome{font-size:clamp(6px,1.1vw,8px);padding:7px 11px;box-shadow:inset 0 0 0 2px #4a3f28;color:#b9b29c}
   .pchome.armed{color:#ff5aa8;box-shadow:inset 0 0 0 2px #ff5aa8}
   .pcbar{
@@ -315,8 +317,12 @@
     </div>
     <div class="screen" id="title">
       <h1>GOLDEN BEARS<br>RESERVE 2026</h1>
-      <div class="diff" id="diffRow">
-        <button data-d="0">Pony</button><button data-d="1">Bandit</button><button data-d="2">Reserve</button><button data-d="3">Varsity</button>
+      <div class="diffbox" role="group" aria-labelledby="diffLabel">
+        <div class="difflabel" id="diffLabel">DIFFICULTY</div>
+        <div class="diff" id="diffRow">
+          <button data-d="0">Pony</button><button data-d="1">Bandit</button><button data-d="2">Reserve</button><button data-d="3">Varsity</button>
+        </div>
+        <div class="diffnote" id="diffNote"></div>
       </div>
       <div class="row">
         <button class="btn" id="goSeason">Season</button>
