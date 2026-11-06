@@ -532,10 +532,13 @@ const COACH_NAMES = ['COACH JASON J','COACH JASON P','COACH CHRIS','COACH TIM','
 function makeCoachRoster(){
   const used = new Set();
   const shuffled = () => COACH_NAMES.slice().sort(() => Math.random() - 0.5);
-  const off = shuffled(), def = shuffled(), st = shuffled();
+  /* set spots: Coach Tim takes the snaps, Coach Chris carries it and returns kicks */
+  const FIXED = { QB:'COACH TIM', RB2:'COACH CHRIS', KR:'COACH CHRIS' };
+  const fixed = new Set(['COACH TIM','COACH CHRIS']);
+  const off = shuffled().filter(n => !fixed.has(n)), def = shuffled(), st = shuffled().filter(n => n !== 'COACH CHRIS');
   return SLOTS.map((s,i)=>{
     let n; do { n = 40 + ((Math.random()*59)|0); } while(used.has(n)); used.add(n);
-    const name = i < 11 ? off[i] : i < 22 ? def[i - 11] : st[i - 22];
+    const name = FIXED[s.pos] || (i < 11 ? off.shift() : i < 22 ? def[i - 11] : st.shift());
     return { num:n, name, pos:s.pos,
              spd: Math.round(rnd(82,92)), pow: Math.round(rnd(95,99)), hnd: Math.round(rnd(75,88)) };
   });
