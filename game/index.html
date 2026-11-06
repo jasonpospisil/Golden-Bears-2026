@@ -1332,9 +1332,13 @@ function buildFormation(kind){
   const dl = front.map(([ps,y])=> mk(byPos(dR,ps),'def','rush', 16, y, {ai:'rush', tag:ps}));
   /* the ends play contain: upfield and outside off the snap, then pursue */
   dl[0].containT = 0.6; dl[4].containT = 0.6;
-  const lbDrop = D===2 ? 104 : D===3 ? 150 : 40;
-  const lb = [['RLB',108],['MLB',150],['LLB',192]].map(([ps,y])=>
-    mk(byPos(dR,ps),'def','lb', 40, y, {ai:'zone', zone:[lbDrop, y], tag:ps}));
+  /* the coaches are twice our size: their backers stand back far enough
+     that they don't sit on top of their own linemen */
+  const lbDepth = vsCoaches() && G.offIsUser ? 78 : 40;
+  const lbDrop = Math.max(lbDepth, D===2 ? 104 : D===3 ? 150 : 40);
+  const lbY = vsCoaches() && G.offIsUser ? [88,150,212] : [108,150,192];   /* and spread out */
+  const lb = [['RLB',lbY[0]],['MLB',lbY[1]],['LLB',lbY[2]]].map(([ps,y])=>
+    mk(byPos(dR,ps),'def','lb', lbDepth, y, {ai:'zone', zone:[lbDrop, y], tag:ps}));
   const cb1 = mk(byPos(dR,'DB',0),'def','cb', 10, 24,  {ai:'cover', cover:x, tag:'DB1'});
   const cb2 = mk(byPos(dR,'DB',1),'def','cb', 10, 262, {ai:'cover', cover:z, tag:'DB2'});
   /* the eleventh man, not on the play card: a deep safety who reads pass
