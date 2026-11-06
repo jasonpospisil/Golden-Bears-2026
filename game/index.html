@@ -359,7 +359,6 @@
       <h2>Pick your opponent</h2>
       <div class="grid" id="teamGrid"></div>
       <div class="row">
-        <button class="btn ghost" id="qlen">Quarters: 1:30</button>
         <button class="btn ghost" id="backTitle">Back</button>
       </div>
     </div>
@@ -6352,13 +6351,7 @@ $('rosterBack').addEventListener('click', ()=>{
   if (lineupBack === 'matchup') show('matchup'); else show('title');
 });
 
-/* quarter length + side toggles */
-const QLENS = [90,120,180,300];
-let qi = 0;
-$('qlen').addEventListener('click', ()=>{
-  qi = (qi+1)%QLENS.length; G.qLen = QLENS[qi];
-  $('qlen').textContent = `Quarters: ${Math.floor(G.qLen/60)}:${String(G.qLen%60).padStart(2,'0')}`;
-});
+/* quarters are always 1:30 (G.qLen = 90) */
 function buildTeamGrid(){
   const g = $('teamGrid'); g.innerHTML='';
   TEAMS.forEach((t,i)=>{
