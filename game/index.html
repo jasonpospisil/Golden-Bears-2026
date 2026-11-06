@@ -832,6 +832,7 @@ const RUN_HOLES = [
   { id:'swR', name:'Sweep right',   y:228, depth:30 }
 ];
 const RUN_CARRIERS = [ ['RB2','RB2'], ['RB3','RB3'], ['RB4','RB4 (wing)'], ['QB','QB keeper'] ];
+const RUN_WR = [ ['block','Block the DBs'], ['go','Go routes (take the DBs deep)'] ];
 const RUN_LINE = [ ['man','Man (each takes his guy)'], ['double','Double-team at the hole'], ['pull','Pull a guard through the hole'] ];
 /* routes as [downfield, toward-the-middle] steps; mirrored for each side */
 const ROUTES = {
@@ -883,7 +884,8 @@ function describePlay(pl){
   if (pl.builtin != null) return pl.tag;
   if (pl.kind === 'run'){
     const c = (RUN_CARRIERS.find(c => c[0] === pl.carrier) || ['RB2'])[0];
-    return `${c} ${holeById(pl.hole).name.replace(' gap','')}`.toUpperCase() + (pl.lead && pl.lead !== 'none' ? `, ${pl.lead} LEADS` : '');
+    return `${c} ${holeById(pl.hole).name.replace(' gap','')}`.toUpperCase() + (pl.lead && pl.lead !== 'none' ? `, ${pl.lead} LEADS` : '')
+           + (pl.wr === 'go' ? ', WRS GO DEEP' : '');
   }
   return PASS_SLOTS.filter(([k]) => pl.routes && pl.routes[k] && pl.routes[k] !== 'block')
                    .map(([k]) => `${k} ${ROUTES[pl.routes[k]].name.split(' ')[0]}`).join(', ').toUpperCase();
@@ -914,6 +916,7 @@ function customArt(pl){
     body = `<rect x="${(hx-5).toFixed(1)}" y="34" width="10" height="9" fill="#f5c233" opacity=".28"/>` + body;
     if (pl.lead && pl.lead !== 'none' && FORM[pl.lead]){ const [lx,ly] = pos(pl.lead); body += path([[lx,ly],[hx,40],[hx,26]], '#cfc7b2'); }
     if (pl.line === 'pull'){ const g = h.y < 150 ? FORM.OL[3] : FORM.OL[1]; body += path([[ax(g[1]),38],[ax(g[1]),44],[hx,44],[hx,28]], '#cfc7b2'); }
+    if (pl.wr === 'go') ['X','Z'].forEach(k => { const [wx,wy] = pos(k); body += path([[wx,wy],[wx,6]], '#cfc7b2'); });
     const [cx,cy] = pos(pl.carrier || 'RB2');
     body += path([[cx,cy],[hx,46],[hx,30]]) + head(hx,30);
   } else {
@@ -1465,8 +1468,14 @@ function buildFormation(kind){
   }
   if (!isPass && P === -1){
     /* a designed run */
-    x.ai = 'block'; x.route = null; x.assign = tagged('DB1'); x.hold = 0.45;
-    z.ai = 'block'; z.route = null; z.assign = tagged('DB2'); z.hold = 0.45;
+    if (spec.wr === 'go'){
+      /* the wideouts sprint deep and drag their corners out of the play */
+      x.ai = 'route'; x.route = routePts('X', 'go'); x.hold = false; x.assign = null;
+      z.ai = 'route'; z.route = routePts('Z', 'go'); z.hold = false; z.assign = null;
+    } else {
+      x.ai = 'block'; x.route = null; x.assign = tagged('DB1'); x.hold = 0.45;
+      z.ai = 'block'; z.route = null; z.assign = tagged('DB2'); z.hold = 0.45;
+    }
     const byName = { RB2:rb, RB3:fb, RB4:te, QB:qb };
     const carrier = byName[spec.carrier] || rb;
     const lead = spec.lead && spec.lead !== 'none' && byName[spec.lead] !== carrier ? byName[spec.lead] : null;
@@ -5024,7 +5033,7 @@ function drawBall(){
    The strip between the stands and the field: the Bears' team box between
    the 30s with the kids on the bench and standing at the rail, the coaches
    at the front, the water cooler, and the white boundary chalk. It scrolls
-   with the field. When the crowd goes nuts, so does the bench.            */
+   with the field. Everybody just stands and watches.                      */
 const SIDE_TOP = 24;                                  /* stands end here */
 let benchKids = null;
 function drawSideline(){
@@ -5070,13 +5079,11 @@ function drawSideline(){
       }
     }
     const kid = (X, foot, k) => {
-      const hop = loud && ((k.seed + Math.floor(t*8)) % 3 === 0) ? -2 : Math.sin(t*1.6 + k.seed) > 0.97 ? -1 : 0;
-      const Y = foot + hop;
+      const Y = foot;
       ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(X - 3, foot, 7, 1);
       ctx.fillStyle = '#e8e4d6'; ctx.fillRect(X - 2, Y - 2, 2, 2); ctx.fillRect(X + 1, Y - 2, 2, 2);       /* socks/cleats */
       ctx.fillStyle = T.trim;    ctx.fillRect(X - 2, Y - 6, 5, 4);                                         /* pants */
       ctx.fillStyle = T.jersey;  ctx.fillRect(X - 3, Y - 11, 7, 5);                                        /* jersey */
-      if (loud && (k.seed % 2)){ ctx.fillRect(X - 4, Y - 15, 1, 4); ctx.fillRect(X + 4, Y - 15, 1, 4); }   /* arms up */
       if (k.helmet){
         ctx.fillStyle = T.jersey; ctx.fillRect(X - 2, Y - 15, 5, 4);                                      /* helmet on */
         ctx.fillStyle = T.trim;   ctx.fillRect(X, Y - 15, 1, 4);
@@ -5106,7 +5113,6 @@ function drawSideline(){
       ctx.fillStyle = '#c98a5a'; ctx.fillRect(X - 1, Y - 15, 4, 3);
       ctx.fillStyle = '#141414'; ctx.fillRect(X - 2, Y - 16, 6, 2);                                        /* cap */
       if (i === 1){ ctx.fillStyle = '#f2f4ec'; ctx.fillRect(X + 4, Y - 11, 3, 4); }                         /* play sheet */
-      if (i === 0 && loud){ ctx.fillStyle = '#c98a5a'; ctx.fillRect(X - 4, Y - 16, 1, 4); ctx.fillRect(X + 4, Y - 16, 1, 4); }
     });
   }
   /* the boundary chalk */
@@ -6331,7 +6337,7 @@ $('myPlays').addEventListener('click', e => {
     $('bookMsg').textContent = p ? `Deleted ${p.name}.` : '';
   }
 });
-$('newRun').addEventListener('click', () => openDesigner({ id:null, kind:'run', name:'', carrier:'RB2', hole:'h4', lead:'RB3', line:'man' }));
+$('newRun').addEventListener('click', () => openDesigner({ id:null, kind:'run', name:'', carrier:'RB2', hole:'h4', lead:'RB3', line:'man', wr:'block' }));
 $('newPass').addEventListener('click', () => openDesigner({ id:null, kind:'pass', name:'', routes:{ X:'go', Z:'slant', RB4:'curl', RB3:'block', RB2:'block' } }));
 
 function sel(key, opts, val){
@@ -6354,6 +6360,7 @@ function buildDesigner(){
     h += `<span>Hole</span>${sel('hole', RUN_HOLES.map(o => [o.id, o.name]), pl.hole)}`;
     h += `<span>Lead block</span>${sel('lead', leads, pl.lead || 'none')}`;
     h += `<span>Line</span>${sel('line', RUN_LINE, pl.line)}`;
+    h += `<span>Receivers</span>${sel('wr', RUN_WR, pl.wr || 'block')}`;
   } else {
     h += `<span class="hd">Pick a route for each player (1 to 4 go out, the rest block)</span>`;
     const opts = Object.entries(ROUTES).map(([k, r]) => [k, r.name]);
