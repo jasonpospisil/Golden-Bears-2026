@@ -2486,8 +2486,8 @@ function drawStands(){
   const cols = [T.jersey, T.trim, '#f2f4ec', '#c98a5a', '#8a5a3c', '#e8c39e', T.jersey, O.jersey, '#3a3a3a'];
   ctx.save();
   ctx.globalAlpha = loud ? 0.8 : 0.32;
-  for (let r = 0; r < 5; r++){
-    const y = 3 + r * 8;
+  for (let r = 0; r < 3; r++){
+    const y = 2 + r * 7;
     for (let c = 0; c < 82; c++){
       const seed = (r*131 + c*977 + r*c*7) % 997;
       const x = c*8 + (r%2)*4;
@@ -5020,46 +5020,144 @@ function drawBall(){
   ctx.strokeRect(b.tx-cam.x-5, FIELD_TOP+b.ty-4, 10, 8);
 }
 
+/* ===================================================== the sideline
+   The strip between the stands and the field: the Bears' team box between
+   the 30s with the kids on the bench and standing at the rail, the coaches
+   at the front, the water cooler, and the white boundary chalk. It scrolls
+   with the field. When the crowd goes nuts, so does the bench.            */
+const SIDE_TOP = 24;                                  /* stands end here */
+let benchKids = null;
+function drawSideline(){
+  const t = performance.now() / 1000, loud = G.crowdT > 0;
+  const y0 = SIDE_TOP, y1 = FIELD_TOP;              /* 24 .. 46 */
+  /* the rail in front of the stands, then sideline turf */
+  ctx.fillStyle = '#3a3223'; ctx.fillRect(0, y0 - 1, W, 2);
+  ctx.fillStyle = '#21592a'; ctx.fillRect(0, y0 + 1, W, y1 - y0 - 1);
+  const cx = x => Math.round(x - cam.x);
+  /* yard numbers on the sideline every 10 */
+  ctx.fillStyle = 'rgba(242,244,236,.18)';
+  for (let yd = 10; yd <= 90; yd += 10){
+    const X = cx(GOAL_L + yd*PPY);
+    if (X < -4 || X > W + 4) continue;
+    ctx.fillRect(X, y0 + 2, 1, 3);
+  }
+  /* the team box: dashed coaching-box line, between the 30s */
+  const a = GOAL_L + 30*PPY, b = GOAL_L + 70*PPY;
+  if (cx(b) > -10 && cx(a) < W + 10){
+    ctx.fillStyle = 'rgba(245,194,51,.55)';
+    for (let x = Math.max(a, cam.x - 6); x < Math.min(b, cam.x + W + 6); x += 6) ctx.fillRect(cx(x), y1 - 6, 3, 1);
+    /* the bench */
+    ctx.fillStyle = '#8a8f96'; ctx.fillRect(cx(a + 40), y0 + 8, b - a - 80, 2);
+    ctx.fillStyle = '#5a5f66';
+    for (let x = a + 40; x < b - 40; x += 48) ctx.fillRect(cx(x), y0 + 10, 1, 3);
+    /* water table and cooler */
+    const wx = cx(GOAL_L + 50*PPY + 8);
+    if (wx > -20 && wx < W + 20){
+      ctx.fillStyle = '#6b5a3a'; ctx.fillRect(wx - 9, y0 + 9, 18, 2); ctx.fillRect(wx - 8, y0 + 11, 1, 5); ctx.fillRect(wx + 7, y0 + 11, 1, 5);
+      ctx.fillStyle = '#ff7a1a'; ctx.fillRect(wx - 7, y0 + 2, 6, 7);
+      ctx.fillStyle = '#f2f4ec'; ctx.fillRect(wx - 7, y0 + 2, 6, 2);
+      ctx.fillStyle = '#ff7a1a'; ctx.fillRect(wx + 1, y0 + 3, 6, 6);
+      ctx.fillStyle = '#f2f4ec'; ctx.fillRect(wx + 1, y0 + 3, 6, 1);
+    }
+    /* the kids not in the game, spread along the box */
+    const T = teamOf(true);
+    if (!benchKids){
+      benchKids = [];
+      let x = a + 30;
+      for (let i = 0; x < b - 30; i++){
+        benchKids.push({ x, row: i % 3 === 1 ? 0 : 1, seed: (i*37) % 11, helmet: i % 4 !== 2 });
+        x += 22 + ((i*13) % 9);
+      }
+    }
+    const kid = (X, foot, k) => {
+      const hop = loud && ((k.seed + Math.floor(t*8)) % 3 === 0) ? -2 : Math.sin(t*1.6 + k.seed) > 0.97 ? -1 : 0;
+      const Y = foot + hop;
+      ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(X - 3, foot, 7, 1);
+      ctx.fillStyle = '#e8e4d6'; ctx.fillRect(X - 2, Y - 2, 2, 2); ctx.fillRect(X + 1, Y - 2, 2, 2);       /* socks/cleats */
+      ctx.fillStyle = T.trim;    ctx.fillRect(X - 2, Y - 6, 5, 4);                                         /* pants */
+      ctx.fillStyle = T.jersey;  ctx.fillRect(X - 3, Y - 11, 7, 5);                                        /* jersey */
+      if (loud && (k.seed % 2)){ ctx.fillRect(X - 4, Y - 15, 1, 4); ctx.fillRect(X + 4, Y - 15, 1, 4); }   /* arms up */
+      if (k.helmet){
+        ctx.fillStyle = T.jersey; ctx.fillRect(X - 2, Y - 15, 5, 4);                                      /* helmet on */
+        ctx.fillStyle = T.trim;   ctx.fillRect(X, Y - 15, 1, 4);
+      } else {
+        ctx.fillStyle = '#c98a5a'; ctx.fillRect(X - 1, Y - 14, 4, 3);                                     /* helmet off */
+        ctx.fillStyle = '#3a2a1a'; ctx.fillRect(X - 1, Y - 15, 4, 1);
+        ctx.fillStyle = T.jersey; ctx.fillRect(X + 4, Y - 8, 3, 3);                                       /* helmet in hand */
+      }
+    };
+    for (const row of [0, 1]){
+      for (const k of benchKids){
+        if (k.row !== row) continue;
+        const X = cx(k.x);
+        if (X < -8 || X > W + 8) continue;
+        kid(X, row ? y1 - 4 : y0 + 13, k);
+      }
+    }
+    /* the coaches at the front of the box, following the ball */
+    const follow = clamp((G.carrier ? G.carrier.x : losX()), a + 60, b - 60);
+    [-34, -6, 22].forEach((dx, i) => {
+      const X = cx(follow + dx + Math.sin(t*0.7 + i) * 4), Y = y1 - 3;
+      if (X < -8 || X > W + 8) return;
+      ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(X - 3, Y + 1, 7, 1);
+      ctx.fillStyle = '#2a2a2a'; ctx.fillRect(X - 2, Y - 1, 2, 2); ctx.fillRect(X + 1, Y - 1, 2, 2);
+      ctx.fillStyle = '#c8b48a'; ctx.fillRect(X - 2, Y - 6, 5, 5);                                         /* khakis */
+      ctx.fillStyle = i === 1 ? '#f5c233' : '#141414'; ctx.fillRect(X - 3, Y - 12, 7, 6);                  /* polo */
+      ctx.fillStyle = '#c98a5a'; ctx.fillRect(X - 1, Y - 15, 4, 3);
+      ctx.fillStyle = '#141414'; ctx.fillRect(X - 2, Y - 16, 6, 2);                                        /* cap */
+      if (i === 1){ ctx.fillStyle = '#f2f4ec'; ctx.fillRect(X + 4, Y - 11, 3, 4); }                         /* play sheet */
+      if (i === 0 && loud){ ctx.fillStyle = '#c98a5a'; ctx.fillRect(X - 4, Y - 16, 1, 4); ctx.fillRect(X + 4, Y - 16, 1, 4); }
+    });
+  }
+  /* the boundary chalk */
+  ctx.fillStyle = '#f2f4ec'; ctx.fillRect(0, y1 - 2, W, 2);
+}
+
 function drawHUD(){
   ctx.fillStyle = '#15120c';
   ctx.fillRect(0,0,W,FIELD_TOP);
   drawStands();
-  /* both scores stacked on the left (away on top, home below); the right
+  drawSideline();
+  /* one slim row up top, over the crowd, so the sideline below shows:
+     both scores on the left, clock and down in the middle; the right
      corner is left clear for the SOUND and PAUSE buttons */
-  hudPlate(4, 4, 122, 38);
-  hudPlate(W/2 - 118, 4, 236, 38);
-  ctx.fillStyle = '#f5c233';
-  ctx.fillRect(0,FIELD_TOP-2,W,2);
+  hudPlate(3, 2, 132, 17);
+  hudPlate(W/2 - 152, 2, 304, 17);
   ctx.textBaseline='middle'; ctx.textAlign='left';
 
   const u = teamOf(true), c = teamOf(false);
-  const chip = (x, y, team, score, hasBall) => {
-    ctx.fillStyle = team.jersey; ctx.fillRect(x, y - 6, 8, 13);
-    ctx.fillStyle = team.trim;   ctx.fillRect(x, y + 1, 8, 3);
-    ctx.font='9px "Press Start 2P", monospace';
+  const chip = (x, team, score, hasBall) => {
+    const y = 11;
+    ctx.fillStyle = team.jersey; ctx.fillRect(x, y - 5, 7, 10);
+    ctx.fillStyle = team.trim;   ctx.fillRect(x, y + 1, 7, 2);
+    ctx.font='8px "Press Start 2P", monospace';
     ctx.fillStyle = hasBall ? '#f5c233' : '#e8e4d6';
-    ctx.fillText(team.abbr, x+13, y);
-    ctx.textAlign='right'; ctx.fillText(String(score), 118, y); ctx.textAlign='left';
+    ctx.fillText(team.abbr, x + 10, y);
+    ctx.textAlign='right'; ctx.fillText(String(score), x + 61, y); ctx.textAlign='left';
   };
-  if (G.userHome){
-    chip(10, 15, c, G.score.cpu, !G.offIsUser);
-    chip(10, 33, u, G.score.user, G.offIsUser);
-  } else {
-    chip(10, 15, u, G.score.user, G.offIsUser);
-    chip(10, 33, c, G.score.cpu, !G.offIsUser);
-  }
+  const away = G.userHome ? [c, G.score.cpu, !G.offIsUser] : [u, G.score.user, G.offIsUser];
+  const home = G.userHome ? [u, G.score.user, G.offIsUser] : [c, G.score.cpu, !G.offIsUser];
+  chip(6, ...away);
+  ctx.fillStyle = '#4a3f28'; ctx.fillRect(69, 5, 1, 12);
+  chip(72, ...home);
 
   ctx.textAlign='center';
-  ctx.font='9px "Press Start 2P", monospace'; ctx.fillStyle='#e8e4d6';
   const m = Math.floor(G.clock/60), s = Math.floor(G.clock%60);
   const qn = G.qIdx>=4 ? 'OT' : 'Q'+(G.qIdx+1);
-  ctx.fillText(`${qn}  ${m}:${String(s).padStart(2,'0')}`, W/2, 14);
-
-  ctx.font='8px "Press Start 2P", monospace'; ctx.fillStyle='#b9b29c';
   const goal = G.ballOn + G.toGo >= 100;
   const dd = G.playKind==='kickoff' ? 'KICKOFF'
-           : `${ordinal(G.down)} & ${goal?'GOAL':G.toGo}   BALL ON ${yardLabel(G.ballOn)}`;
-  ctx.fillText(dd, W/2, 32);
+           : `${ordinal(G.down)} & ${goal?'GOAL':G.toGo}  BALL ON ${yardLabel(G.ballOn)}`;
+  ctx.font='8px "Press Start 2P", monospace'; ctx.fillStyle='#e8e4d6';
+  const clk = `${qn} ${m}:${String(s).padStart(2,'0')}`;
+  ctx.font='7px "Press Start 2P", monospace';
+  const ddw = ctx.measureText(dd).width;
+  ctx.font='8px "Press Start 2P", monospace';
+  const ckw = ctx.measureText(clk).width, gap = 14, x0 = W/2 - (ckw + gap + ddw)/2;
+  ctx.textAlign='left';
+  ctx.fillText(clk, x0, 11);
+  ctx.font='7px "Press Start 2P", monospace'; ctx.fillStyle='#b9b29c';
+  ctx.fillText(dd, x0 + ckw + gap, 11);
+  ctx.textAlign='center';
 
   if (G.phase==='live' && G.matched && G.snapT<1.4 && G.playKind==='scrim'){
     ctx.fillStyle='#d93b2b'; ctx.font='8px "Press Start 2P", monospace';
