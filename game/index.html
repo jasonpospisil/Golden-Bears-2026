@@ -165,6 +165,12 @@
   .wk.now:hover,.wk.now:active{background:#3a2e12}
   .wk.now .r{color:var(--gold)}
   .wk .n{color:#8d846c;width:16px;flex:0 0 16px}
+  #poList{width:min(520px,96%);max-height:52vh;overflow:auto;border:2px solid #3a3223;background:#12100a}
+  .wk.rd{color:var(--gold);background:#0d0b07;letter-spacing:2px;padding:5px 9px}
+  .wk .tm{flex:1;display:flex;flex-direction:column;gap:2px}
+  .wk .tm b{font-weight:normal}
+  .wk .tm .lose{color:#6f6852}
+  .wk .tm .us{color:var(--gold)}
   .wk .h{width:12px;height:12px;flex:0 0 12px;border:1px solid #000}
   .wk .o{flex:1}
   .wk .r{color:#8d846c}
@@ -357,6 +363,7 @@
       <div class="row">
         <button class="btn" id="goSeason">Season</button>
         <button class="btn" id="goPlay">Single game</button>
+        <button class="btn" id="goPlayoffs">Playoffs</button>
       </div>
       <div class="row">
         <button class="btn ghost" id="goIntro">Team intro</button>
@@ -375,6 +382,18 @@
       <div class="row">
         <button class="btn" id="lineupDone">Done</button>
         <button class="btn ghost" id="lineupFull">Full depth chart</button>
+      </div>
+    </div>
+
+    <!-- playoffs: Division 1 bracket -->
+    <div class="screen" id="playoffs">
+      <h2>Playoffs &middot; Division 1</h2>
+      <div id="poList"></div>
+      <p class="sub" id="poRec"></p>
+      <div class="row">
+        <button class="btn" id="poPlay">Play quarterfinal</button>
+        <button class="btn ghost" id="poNew">New playoffs</button>
+        <button class="btn ghost" id="poBack">Back</button>
       </div>
     </div>
 
@@ -3807,6 +3826,7 @@ function endOfQuarter(){
 /* the final whistle: save the result, show the stats, then the final screen */
 function gameOver(){
   if (G.phase === 'over' || G.phase === 'stats') return;
+  if (G.mode==='playoff' && !G.poSaved){ G.poSaved = true; poRecord(G.score.user, G.score.cpu); }
   if (G.mode==='season'){
     const wk = G.week - 1;
     if (wk >= 0 && wk < SCHEDULE.length && !season.results[wk]){
@@ -3837,6 +3857,12 @@ function gameOverScreen(){
            : `Season done at ${rec.w}&ndash;${rec.l}${rec.t?'&ndash;'+rec.t:''}.`;
     }
     $('resume').textContent = 'Back to schedule';
+  } else if (G.mode==='playoff'){
+    const champ = poChamp(), nx = poNext();
+    tail = champ === 0 ? 'DIVISION 1 CHAMPIONS!'
+         : u > c && nx ? `On to the ${PO_ROUNDS[nx.ri].toLowerCase()}.`
+         : `Season over. ${PO_ROUNDS[(G.week || 1) - 1].toLowerCase()} loss.`;
+    $('resume').textContent = 'Back to bracket';
   } else {
     $('resume').textContent = 'Play again';
   }
@@ -6089,6 +6115,7 @@ $('resume').addEventListener('click', ()=>{
   if (G.phase==='over'){
     G.phase='menu';
     if (G.mode==='season'){ buildSeason(); show('season'); }
+    else if (G.mode==='playoff'){ buildPlayoffs(); show('playoffs'); }
     else { buildTeamGrid(); show('select'); }
     return;
   }
@@ -6224,6 +6251,105 @@ document.querySelectorAll('#diffRow button').forEach(b =>
   b.addEventListener('click', () => { setDifficulty(+b.dataset.d); beep(520,.05,'square',.04); }));
 setDifficulty(diffIdx);
 
+/* ------------------------------------------------------------ playoffs
+   GCYL 6th grade, Division 1 (the top 8 in the RPI standings). Seeded
+   1v8, 4v5, 3v6, 2v7; the higher seed is at home. Three rounds:
+   quarterfinal, semifinal, championship. The other games are decided by
+   the ratings when each round finishes. Lose and you're out.          */
+const PO_KEY = 'gb26.playoffs.v1';
+const PO_SEEDS = [9, 3, 10, 8, 2, 0, 11, 12];   /* Visitation, Jr. Rams, St. Jude, Cov Cath, Cougars, Bears, Guardian Angels, IHM */
+const PO_ROUNDS = ['QUARTERFINAL', 'SEMIFINAL', 'CHAMPIONSHIP'];
+const poSeed = t => PO_SEEDS.indexOf(t) + 1;
+const poMatch = (x, y) => poSeed(x) < poSeed(y) ? { a:x, b:y, w:null } : { a:y, b:x, w:null };
+function blankPlayoffs(){
+  const S = PO_SEEDS;
+  return { rounds: [[poMatch(S[0],S[7]), poMatch(S[3],S[4]), poMatch(S[2],S[5]), poMatch(S[1],S[6])]] };
+}
+let po = (()=>{ try { const p = JSON.parse(localStorage.getItem(PO_KEY)); if (p && p.rounds) return p; } catch(e){} return blankPlayoffs(); })();
+function storePlayoffs(){ try { localStorage.setItem(PO_KEY, JSON.stringify(po)); } catch(e){} }
+function poSim(m){
+  const ra = TEAMS[m.a].rate, rb = TEAMS[m.b].rate;
+  const aWins = Math.random() < 1 / (1 + Math.pow(10, (rb - ra) / 8));
+  const W = pick([14, 20, 21, 26, 27, 28, 34, 35]), L = pick([0, 6, 7, 8, 12, 13, 14, 20]);
+  const hi = Math.max(W, L + 1);
+  m.w = aWins ? m.a : m.b; m.sa = aWins ? hi : L; m.sb = aWins ? L : hi;
+}
+/* fill in the rest of a finished round and set up the next one */
+function poAdvance(){
+  for (;;){
+    const r = po.rounds[po.rounds.length - 1];
+    if (r.some(m => m.w === null)) return;
+    if (r.length === 1) return;                      /* the championship is done */
+    const next = [];
+    for (let i = 0; i < r.length; i += 2) next.push(poMatch(r[i].w, r[i+1].w));
+    po.rounds.push(next);
+    if (poOut()) next.forEach(poSim);                /* we're out: the rest plays itself */
+  }
+}
+function poOut(){ return po.rounds.some(r => r.some(m => m.w !== null && (m.a === 0 || m.b === 0) && m.w !== 0)); }
+function poNext(){                                   /* our next game, or null */
+  if (poOut()) return null;
+  const ri = po.rounds.length - 1;
+  const m = po.rounds[ri].find(m => (m.a === 0 || m.b === 0) && m.w === null);
+  return m ? { m, ri, opp: m.a === 0 ? m.b : m.a, home: m.a === 0 } : null;
+}
+function poChamp(){ const r = po.rounds[2]; return r && r[0].w !== null ? r[0].w : null; }
+function poRecord(us, them){
+  const n = poNext();
+  if (!n || us === them) return;
+  const m = n.m;
+  m.w = us > them ? 0 : n.opp;
+  m.sa = m.a === 0 ? us : them; m.sb = m.a === 0 ? them : us;
+  po.rounds[n.ri].forEach(x => { if (x.w === null) poSim(x); });
+  poAdvance();
+  storePlayoffs();
+}
+function buildPlayoffs(){
+  const list = $('poList'); list.innerHTML = '';
+  const nx = poNext();
+  PO_ROUNDS.forEach((name, ri) => {
+    const hd = document.createElement('div'); hd.className = 'wk rd'; hd.textContent = name;
+    list.appendChild(hd);
+    const r = po.rounds[ri];
+    if (!r){
+      const tbd = document.createElement('div'); tbd.className = 'wk';
+      tbd.innerHTML = '<span class="o" style="color:#6f6852">To be decided</span>'; list.appendChild(tbd);
+      return;
+    }
+    r.forEach(m => {
+      const row = document.createElement('div');
+      const mine = nx && nx.m === m;
+      row.className = 'wk' + (mine ? ' now' : '');
+      const line = (t, sc) => {
+        const cls = (t === 0 ? 'us ' : '') + (m.w !== null && m.w !== t ? 'lose' : '');
+        return `<b class="${cls}">#${poSeed(t)} ${TEAMS[t].name}${m.w !== null ? ' &nbsp;' + sc : ''}</b>`;
+      };
+      row.innerHTML = `<span class="h" style="background:${TEAMS[m.a].jersey}"></span>` +
+        `<span class="tm">${line(m.a, m.sa)}${line(m.b, m.sb)}</span>` +
+        `<span class="r">${mine ? 'PLAY &#9656;' : m.w === null ? '&mdash;' : 'FINAL'}</span>`;
+      if (mine){ row.setAttribute('role','button'); row.addEventListener('click', ()=>$('poPlay').click()); }
+      list.appendChild(row);
+    });
+  });
+  const champ = poChamp();
+  let msg;
+  if (champ === 0) msg = 'DIVISION 1 CHAMPIONS!';
+  else if (poOut()){
+    const ri = po.rounds.findIndex(r => r.some(m => (m.a === 0 || m.b === 0) && m.w !== null && m.w !== 0));
+    msg = `Out in the ${PO_ROUNDS[ri].toLowerCase()}.` + (champ !== null ? ` ${TEAMS[champ].name} won it all.` : '');
+  } else msg = `Next: ${PO_ROUNDS[nx.ri].toLowerCase()} ${nx.home ? 'vs' : 'at'} ${TEAMS[nx.opp].name}`;
+  $('poRec').textContent = msg;
+  $('poPlay').textContent = nx ? 'Play ' + PO_ROUNDS[nx.ri].toLowerCase() : 'Playoffs over';
+  $('poPlay').disabled = !nx; $('poPlay').style.opacity = nx ? 1 : .4;
+}
+$('goPlayoffs').addEventListener('click', ()=>{ buildPlayoffs(); show('playoffs'); });
+$('poPlay').addEventListener('click', ()=>{
+  const n = poNext(); if (!n) return;
+  showMatchup(n.opp, n.home, n.ri + 1, 'playoff');
+});
+$('poNew').addEventListener('click', ()=>{ po = blankPlayoffs(); storePlayoffs(); buildPlayoffs(); });
+$('poBack').addEventListener('click', ()=>show('title'));
+
 /* ---------------------------------------------------------- season mode */
 const SKEY = 'gb26.season.v1';
 let season = loadSeason();
@@ -6284,12 +6410,14 @@ function showMatchup(oppIdx, home, week, mode){
   const us = TEAMS[0], them = TEAMS[oppIdx];
   $('mWeek').textContent = mode==='season'
     ? `Week ${week} — ${home ? 'home' : 'away'}`
+    : mode==='playoff'
+    ? `Division 1 ${PO_ROUNDS[week-1].toLowerCase()} — ${home ? 'home' : 'away'}`
     : 'Single game';
   const card = (t, note) =>
     `<span class="blk" style="background:${t.jersey}"></span><span>${t.name}</span><span class="rt">${note}</span>`;
   const rec = seasonRecord();
-  $('mHome').innerHTML = card(us, mode==='season' ? `${rec.w}-${rec.l}${rec.t?'-'+rec.t:''}` : 'your team');
-  $('mAway').innerHTML = card(them, them.coaches ? 'just for fun' : `rating ${them.rate + (home?0:2)}`);
+  $('mHome').innerHTML = card(us, mode==='season' ? `${rec.w}-${rec.l}${rec.t?'-'+rec.t:''}` : mode==='playoff' ? `#${poSeed(0)} seed` : 'your team');
+  $('mAway').innerHTML = card(them, them.coaches ? 'just for fun' : (mode==='playoff' ? `#${poSeed(oppIdx)} seed · ` : '') + `rating ${them.rate + (home?0:2)}`);
   $('mVs').textContent = home ? 'VS' : 'AT';
   show('matchup');
 }
@@ -6323,11 +6451,14 @@ $('kickoffBtn').addEventListener('click', ()=>{
   const them = TEAMS[pending.oppIdx];
   const head = pending.mode === 'season'
     ? `WEEK ${pending.week} ${pending.home ? 'VS' : 'AT'} ${them.name}`
+    : pending.mode === 'playoff'
+    ? `${PO_ROUNDS[pending.week - 1]} ${pending.home ? 'VS' : 'AT'} ${them.name}`
     : `${pending.home ? 'VS' : 'AT'} ${them.name}`;
   playIntro(fullSquad(), head, 'THE WHOLE SQUAD', head, go);     /* every Bear gets introduced */
 });
 $('mBack').addEventListener('click', ()=>{
   if (pending && pending.mode==='season'){ buildSeason(); show('season'); }
+  else if (pending && pending.mode==='playoff'){ buildPlayoffs(); show('playoffs'); }
   else { buildTeamGrid(); show('select'); }
 });
 
@@ -6538,7 +6669,7 @@ function newGame(oppIdx, home, mode){
   G.stats = freshStats(); G.statView = null;
   G.offHist = []; G.defHist = [];          /* a fresh game: the computer hasn't seen you yet */
   G.cpuTeam = oppIdx;
-  G.mode = mode || 'single';
+  G.mode = mode || 'single'; G.poSaved = false;
   G.userHome = home !== false;
   G.week = pending ? pending.week : 0;
   cpuRoster = TEAMS[oppIdx].coaches ? makeCoachRoster()
