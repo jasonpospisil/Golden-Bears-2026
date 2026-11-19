@@ -3162,7 +3162,12 @@ function stepKnocked(p, dt){
 }
 
 const HOLE_HALF = 26;          /* half the width of the lane a designed run opens */
+const SACK_CLOCK = 4;           /* on a pass, hold it longer than this and the line breaks down */
 function resolveBlocks(dt){
+  const op = G.off && OFFB()[G.offPlay];
+  const lateQB = G.playKind === 'scrim' && G.phase === 'live' && G.snapT > SACK_CLOCK &&
+                 op && op.kind === 'pass' && G.carrier && G.carrier === G.off.qb &&
+                 !G.handoff && !G.thrown && G.carrier.x < losX();
   for (const b of G.players){
     if (b.side!=='off') continue;
     if (!(b.ai==='block'||b.ai==='lead'||b.ai==='kickblock'||b.ai==='retblock'||b.ai==='escort')) continue;
@@ -3192,6 +3197,7 @@ function resolveBlocks(dt){
         d.bustT = (d.bustT || 0) + dt;
         if (d.bustT > 0.2){ knockDown(b, d); continue; }
       }
+      if (lateQB && dist < 15){ knockDown(b, d); continue; }   /* too long in the pocket: he's beaten */
       if (dist < 15){
         d.engagedT = 0.09;
         const pushA = Math.atan2(d.y-b.y, d.x-b.x);
@@ -4817,7 +4823,7 @@ function drawField(){
   post(Math.round(sx(GOAL_L - 10*PPY)), -1);
 
   /* your run: mark the hole at the line until the runner gets there */
-  const holeOn = G.hole && G.offIsUser && G.playKind === 'scrim' &&
+  const holeOn = G.hole && G.offIsUser && G.practice && G.playKind === 'scrim' &&
                  (G.phase === 'presnap' || (G.phase === 'live' && G.snapT < 1.8 && G.carrier && G.carrier.x < losX() + 10 &&
                                             OFFB()[G.offPlay] && OFFB()[G.offPlay].kind === 'run'));
   if (holeOn){
@@ -4828,7 +4834,7 @@ function drawField(){
     ctx.fillStyle = `rgba(245,194,51,${(0.85*a).toFixed(3)})`;
     ctx.fillRect(lx - 30, hy - 10, 60, 2); ctx.fillRect(lx - 30, hy + 8, 60, 2);
   }
-  if (G.phase==='presnap' && G.hole && G.offIsUser){
+  if (G.phase==='presnap' && G.hole && G.offIsUser && G.practice){
     const hx = Math.round(sx(G.hole.x)), hy = FIELD_TOP + Math.round(G.hole.y);
     ctx.fillStyle = 'rgba(245,194,51,.8)';
     for (let i=0;i<3;i++) ctx.fillRect(hx-16+i*8, hy-1, 4, 3);
