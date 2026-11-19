@@ -161,6 +161,9 @@
       border-bottom:1px solid #241e14;line-height:1.6;text-align:left}
   .wk:last-child{border-bottom:0}
   .wk.now{background:#221b0d;box-shadow:inset 3px 0 0 var(--gold)}
+  .wk.now{cursor:pointer}
+  .wk.now:hover,.wk.now:active{background:#3a2e12}
+  .wk.now .r{color:var(--gold)}
   .wk .n{color:#8d846c;width:16px;flex:0 0 16px}
   .wk .h{width:12px;height:12px;flex:0 0 12px;border:1px solid #000}
   .wk .o{flex:1}
@@ -6241,12 +6244,14 @@ function buildSeason(){
     const t = TEAMS[g.opp], r = season.results[i];
     const row = document.createElement('div');
     row.className = 'wk' + (i===season.week ? ' now' : '');
-    const res = r ? `${r.us>r.them?'W':r.us<r.them?'L':'T'} ${r.us}-${r.them}` : '&mdash;';
+    const res = r ? `${r.us>r.them?'W':r.us<r.them?'L':'T'} ${r.us}-${r.them}` : i===season.week ? 'PLAY &#9656;' : '&mdash;';
     const cls = r ? (r.us>r.them?'win':r.us<r.them?'loss':'') : '';
     row.innerHTML = `<span class="n">${i+1}</span>` +
       `<span class="h" style="background:${t.jersey}"></span>` +
       `<span class="o">${g.home?'vs':'at'} ${t.name}</span>` +
       `<span class="r ${cls}">${res}</span>`;
+    /* tap this week's game to play it (the same as the Play week button) */
+    if (i===season.week){ row.setAttribute('role','button'); row.addEventListener('click', ()=>$('playWeek').click()); }
     list.appendChild(row);
   });
   const rec = seasonRecord();
