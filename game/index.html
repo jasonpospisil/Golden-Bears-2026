@@ -3193,7 +3193,7 @@ function stepKnocked(p, dt){
 }
 
 const HOLE_HALF = 26;          /* half the width of the lane a designed run opens */
-const SACK_CLOCK = [5, 4.5, 4, 3.5];   /* on a pass, hold it longer than this and the line breaks down (Pony..Varsity) */
+const SACK_CLOCK = [4.5, 4, 3.5, 3];   /* on a pass, hold it longer than this and the line breaks down (Pony..Varsity) */
 function resolveBlocks(dt){
   const op = G.off && OFFB()[G.offPlay];
   const lateQB = G.playKind === 'scrim' && G.phase === 'live' && G.snapT > SACK_CLOCK[diffIdx] &&
