@@ -269,6 +269,17 @@
     background:rgba(10,8,4,.62);border:3px solid #f5c233;color:var(--gold);
     box-shadow:0 0 0 2px rgba(0,0,0,.7);text-shadow:1px 1px 0 #000;
   }
+  /* what each button does, written under it */
+  .abtns button{position:relative}
+  .abtns button::after{
+    position:absolute;left:50%;top:calc(100% + 4px);transform:translateX(-50%);white-space:nowrap;
+    font-size:clamp(5px,1.1vw,8px);color:#fff;background:rgba(0,0,0,.72);padding:3px 4px;border-radius:2px;
+    letter-spacing:1px;pointer-events:none}
+  #btnB::after{content:'SWITCH'}
+  #btnA::after{content:'TURBO'}
+  #pads.kicking #btnA::after{content:'KICK'}
+  #pads.kicking #btnB::after{content:none}
+  .abtns{bottom:calc(5% + 16px)}
   .abtns button:active,.abtns button.hit{background:rgba(245,194,51,.65);color:#150f00}
   #recv{position:absolute;left:50%;transform:translateX(-50%);bottom:5%;display:none;gap:8px;pointer-events:auto}
   #recv.on{display:flex}
@@ -318,7 +329,7 @@
     <div id="pads">
       <div class="stick" id="dpad" aria-label="Move"><div class="knob" id="knob"></div></div>
       <div class="abtns">
-        <button id="btnB" aria-label="Switch player or dive">B</button>
+        <button id="btnB" aria-label="Switch player">B</button>
         <button id="btnA" aria-label="Turbo">A</button>
       </div>
       <div id="recv"></div>
