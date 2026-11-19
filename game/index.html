@@ -1638,7 +1638,7 @@ function requestSnap(){
 function snap(){
   G.pitchedThisPlay = false;
   G.phase = 'live'; G.snapT = 0; G.pitch = null; G.swT = 0; G.brokenUp = false; G.tackler = null;
-  G.grap = null; G.grapN = 0;
+  G.grap = null; G.grapN = 0; G.breaks = 0;
   /* shotgun: the ball leaves the grass at the center and flies back to the QB */
   if (G.playKind === 'scrim') G.snapBall = { x: losX() - 1, y: 150, dur: 0.26 };
   sfxSnap();
@@ -1974,7 +1974,7 @@ function stPuntCatch(st){
   const f = st.flight, r = st.returner;
   r.x = f.tx; r.y = f.ty; r.vx = r.vy = 0;
   G.st = null;
-  G.phase = 'live'; G.snapT = 0; G.ball = null;
+  G.phase = 'live'; G.snapT = 0; G.ball = null; G.breaks = 0;
   G.clock = Math.max(0, G.clock - 4);          /* the snap and the hang time */
   hideScreens(); pads(true);
   startReturn(r, 'punt');
@@ -2149,7 +2149,7 @@ function beginLive(){
   G.target = null; G.caught = null; G.hl = null; G.hlT = 0;
   cam.fx = cam.x = clamp((G.carrier ? G.carrier.x : losX()) - W*0.42, 0, FIELD_W - W);
   G.phase = 'live'; G.snapT = 0; G.result = null; G.thrown = null; G.handoff = false;
-  G.grap = null; G.grapN = 0;
+  G.grap = null; G.grapN = 0; G.breaks = 0;
   assignUser();
   hideScreens(); pads(true);
   sfxSnap();
@@ -2623,7 +2623,7 @@ const GRAP_T = 1.6;
 const GRAP_SLOW = 0.35;                           /* everyone else moves at about a third speed during a grapple */
 const GRAP_CPU = [0.20, 0.27, 0.33, 0.41];        /* how hard the computer pushes, Pony..Varsity */
 function wantGrapple(c, d, engaged){
-  if (engaged || (G.grapN || 0) >= 2 || G.phase !== 'live') return false;
+  if (engaged || (G.grapN || 0) >= 2 || (G.breaks || 0) >= 1 || G.phase !== 'live') return false;
   /* break-tackle battles only on running plays: never on a pass play (no
      sacks, no receivers after the catch), kicks or returns */
   if (G.playKind !== 'scrim' || !OFFB()[G.offPlay] || OFFB()[G.offPlay].kind !== 'run') return false;
@@ -2671,6 +2671,7 @@ function updateGrapple(dt){
     d.stun = 1.0; d.vx = g.side * 60; d.vy = 0;
     c.immune = 0.8; c.stun = 0;
     c.vx = fwd * speedOf(c) * 1.15; c.vy = 0; c.face = fwd;
+    G.breaks = (G.breaks || 0) + 1;              /* one broken tackle a play, then he goes down */
     G.popMsg = 'BROKE FREE!'; G.popT = 1.0;
     crowdCheer(0.8);
     beep(523,.07,'square',.05); setTimeout(()=>beep(784,.1,'square',.05), 70);
@@ -3261,7 +3262,8 @@ function tackleCheck(){
       let br = 0.06 + (c.pow - d.pow)*0.005 + (c.turbo?0.03:0) + (engaged?0.34:0);
       if (c.dive>0) br += 0.05;
       if (star) br *= 0.45;                              /* and he wraps up */
-      if (Math.random() < clamp(br, star ? 0.01 : 0.02, 0.4)){
+      if ((G.breaks || 0) < 1 && Math.random() < clamp(br, star ? 0.01 : 0.02, 0.4)){
+        G.breaks = (G.breaks || 0) + 1;
         d.stun = 0.55; c.immune = 0.35;
         beep(300,.05,'square',.04);
       } else {
