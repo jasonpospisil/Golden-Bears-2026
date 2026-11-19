@@ -539,14 +539,22 @@ const pick = a => a[(Math.random()*a.length)|0];
 /* ---------------------------------------------------------------- teams */
 const TEAMS = [
   { name:'GOLDEN BEARS', abbr:'GB',  jersey:'#f5c233', trim:'#1b4fd8', helmet:'#f5c233', pants:'#1b4fd8', num:'#1b4fd8', rate:78 },
-  { name:'ST. JAMES',    abbr:'STJ', jersey:'#0e4a27', trim:'#f2f4ec', helmet:'#0a3a1e', pants:'#e8e4d6', num:'#ffffff', rate:73 },
-  { name:'COUGARS',      abbr:'COU', jersey:'#7d1f2b', trim:'#e0c060', helmet:'#5a121c', pants:'#ddd6c2', num:'#e0c060', rate:76 },
-  { name:'JR. RAMS',     abbr:'RAM', jersey:'#20386f', trim:'#b9c2d0', helmet:'#16274f', pants:'#b9c2d0', num:'#ffffff', rate:79 },
-  { name:'ST. IGNATIUS', abbr:'IGN', jersey:'#2a5bd7', trim:'#ffd23f', helmet:'#1b3c92', pants:'#e8e4d6', num:'#ffd23f', rate:82 },
-  { name:'SASEAS',       abbr:'SAS', jersey:'#c23a2b', trim:'#14110e', helmet:'#8d2319', pants:'#2a2a2a', num:'#ffffff', rate:71 },
-  { name:'SILVERCATS',   abbr:'SIL', jersey:'#9aa0a6', trim:'#14110e', helmet:'#6f757a', pants:'#2a2a2a', num:'#14110e', rate:75 },
-  { name:'VICTORY',      abbr:'VIC', jersey:'#5b3a8e', trim:'#e6c84a', helmet:'#3d2464', pants:'#d8d3c4', num:'#e6c84a', rate:74 },
-  { name:'COV CATH',     abbr:'CCH', jersey:'#1b3c92', trim:'#f2f4ec', helmet:'#12295f', pants:'#e8e4d6', num:'#ffffff', rate:84 },
+  /* ratings follow the GCYL 6th-grade RPI standings (Nov 2026) */
+  { name:'ST. JAMES'       , abbr:'STJ', jersey:'#0e4a27', trim:'#f2f4ec', helmet:'#0a3a1e', pants:'#e8e4d6', num:'#ffffff', rate:70 },
+  { name:'COUGARS'         , abbr:'COU', jersey:'#7d1f2b', trim:'#e0c060', helmet:'#5a121c', pants:'#ddd6c2', num:'#e0c060', rate:82 },
+  { name:'JR. RAMS'        , abbr:'RAM', jersey:'#20386f', trim:'#b9c2d0', helmet:'#16274f', pants:'#b9c2d0', num:'#ffffff', rate:85 },
+  { name:'ST. IGNATIUS'    , abbr:'IGN', jersey:'#2a5bd7', trim:'#ffd23f', helmet:'#1b3c92', pants:'#e8e4d6', num:'#ffd23f', rate:74 },
+  { name:'SASEAS'          , abbr:'SAS', jersey:'#c23a2b', trim:'#14110e', helmet:'#8d2319', pants:'#2a2a2a', num:'#ffffff', rate:70 },
+  { name:'SILVERCATS'      , abbr:'SIL', jersey:'#9aa0a6', trim:'#14110e', helmet:'#6f757a', pants:'#2a2a2a', num:'#14110e', rate:76 },
+  { name:'VICTORY'         , abbr:'VIC', jersey:'#5b3a8e', trim:'#e6c84a', helmet:'#3d2464', pants:'#d8d3c4', num:'#e6c84a', rate:74 },
+  { name:'COV CATH'        , abbr:'CCH', jersey:'#1b3c92', trim:'#f2f4ec', helmet:'#12295f', pants:'#e8e4d6', num:'#ffffff', rate:82 },
+  { name:'VISITATION'      , abbr:'VIS', jersey:'#0b2a5b', trim:'#e6b422', helmet:'#071d40', pants:'#e8e4d6', num:'#e6b422', rate:86 },
+  { name:'ST. JUDE'        , abbr:'JUD', jersey:'#c8102e', trim:'#f2f4ec', helmet:'#8f0b20', pants:'#e8e4d6', num:'#ffffff', rate:84 },
+  { name:'GUARDIAN ANGELS' , abbr:'GA', jersey:'#2e7bc4', trim:'#f2f4ec', helmet:'#1f5a92', pants:'#e8e4d6', num:'#ffffff', rate:79 },
+  { name:'IHM'             , abbr:'IHM', jersey:'#3c1f6e', trim:'#f2f4ec', helmet:'#28134c', pants:'#e8e4d6', num:'#ffffff', rate:78 },
+  { name:'ST. SUSANNA'     , abbr:'SUS', jersey:'#0f6e5f', trim:'#f2c94c', helmet:'#0a4c42', pants:'#e8e4d6', num:'#f2c94c', rate:76 },
+  { name:'ST. ANTONINUS'   , abbr:'ANT', jersey:'#14110e', trim:'#d9a441', helmet:'#000000', pants:'#d9a441', num:'#d9a441', rate:74 },
+  { name:'ALL SAINTS'      , abbr:'ALS', jersey:'#e06a1b', trim:'#14110e', helmet:'#a84d12', pants:'#2a2a2a', num:'#ffffff', rate:74 },
   /* just for fun, single game only: the coaches. Twice the size, and they let you know it. */
   { name:'THE COACHES',  abbr:'COA', jersey:'#2b2f36', trim:'#c9ced6', helmet:'#1a1d22', pants:'#7d838c', num:'#ffffff', rate:50, coaches:true }
 ];
@@ -6513,8 +6521,10 @@ $('rosterBack').addEventListener('click', ()=>{
 /* quarters are always 1:30 (G.qLen = 90) */
 function buildTeamGrid(){
   const g = $('teamGrid'); g.innerHTML='';
-  TEAMS.forEach((t,i)=>{
-    if (i === 0) return;
+  const order = TEAMS.map((t,i)=>i).filter(i=>i>0)
+    .sort((x,y)=> (TEAMS[x].coaches?1:0)-(TEAMS[y].coaches?1:0) || TEAMS[y].rate-TEAMS[x].rate);
+  order.forEach(i=>{
+    const t = TEAMS[i];
     const b = document.createElement('button');
     b.className='team';
     b.innerHTML = `<span class="helm" style="background:${t.jersey}"></span><span>${t.name}<br><span style="color:#8d846c">${t.coaches ? 'JUST FOR FUN' : 'RATING ' + t.rate}</span></span>`;
