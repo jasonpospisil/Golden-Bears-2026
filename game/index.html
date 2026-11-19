@@ -4754,10 +4754,6 @@ function drawField(){
   const endzone = (team, x0) => {
     ctx.fillStyle = team.jersey;
     ctx.fillRect(Math.round(sx(x0)), FIELD_TOP, 10*PPY, FIELD_H);
-    ctx.fillStyle = team.trim;
-    ctx.globalAlpha = .22;
-    for (let i=-4; i<20; i++) ctx.fillRect(Math.round(sx(x0)) + i*14, FIELD_TOP, 6, FIELD_H);
-    ctx.globalAlpha = 1;
     ctx.font = '10px "Press Start 2P", monospace';
     ctx.textAlign='center'; ctx.textBaseline='middle';
     const letters = team.abbr.split('');
