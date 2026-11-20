@@ -2857,7 +2857,8 @@ function stepPos(p, dt){
   p.x = clamp(p.x, 4, FIELD_W-4);
   const sp = Math.hypot(p.vx,p.vy);
   p.anim += sp*dt*0.09;
-  if (Math.abs(p.vx) > 6) p.face = p.vx>0?1:-1;
+  if (p.holdFace) p.holdFace = false;            /* a blocker on his man keeps facing him */
+  else if (Math.abs(p.vx) > 6) p.face = p.vx>0?1:-1;
 }
 
 function humanMove(p, dt, turbo){
@@ -2957,7 +2958,7 @@ function offenseAI(p, dt, isPass){
       const foe = mine || nearestFoe(p, 54);
       if (foe && p.x > losX() - 24){
         const seal = (foe.y >= G.hole.y) ? 1 : -1;
-        steer(p, foe.x - 4, foe.y - seal*7, s);
+        steerBlock(p, foe, foe.x - 4, foe.y - seal*7, s);
       } else steer(p, G.hole.x + 26, G.hole.y, s*1.06);
       return;
     }
@@ -3021,14 +3022,14 @@ function offenseAI(p, dt, isPass){
       p.leadFoe = foe;
       if (foe){
         const seal = (foe.y >= hy) ? 1 : -1;
-        steer(p, foe.x - 4, foe.y - seal*7, s);
+        steerBlock(p, foe, foe.x - 4, foe.y - seal*7, s);
       } else steer(p, p.x + 40, hy, s);
       return;
     }
     const c = focusPoint(p);
     steer(p, c.x + 52, c.y, s*0.95);
     const foe = nearestFoe(p, 46);
-    if (foe) steer(p, foe.x, foe.y, s);
+    if (foe) steerBlock(p, foe, foe.x, foe.y, s);
     return;
   }
   if (p.ai==='escort'){
@@ -3050,7 +3051,7 @@ function offenseAI(p, dt, isPass){
     }
     if (foe){
       const ang = Math.atan2(c.y - foe.y, c.x - foe.x);
-      steer(p, foe.x + Math.cos(ang)*9, foe.y + Math.sin(ang)*9, s);
+      steerBlock(p, foe, foe.x + Math.cos(ang)*9, foe.y + Math.sin(ang)*9, s);
     } else steer(p, c.x + (G.dir||1)*55, c.y + (p.y - c.y)*0.6, s*0.9);
     return;
   }
@@ -3059,7 +3060,7 @@ function offenseAI(p, dt, isPass){
     const foe = nearestFoe(p, 220);
     if (foe && c){
       const ang = Math.atan2(c.y - foe.y, c.x - foe.x);
-      steer(p, foe.x + Math.cos(ang)*9, foe.y + Math.sin(ang)*9, s);
+      steerBlock(p, foe, foe.x + Math.cos(ang)*9, foe.y + Math.sin(ang)*9, s);
     } else if (c) steer(p, c.x + (G.dir||1)*60, p.y, s*0.8);
     return;
   }
@@ -3070,7 +3071,7 @@ function offenseAI(p, dt, isPass){
     const c = G.carrier;
     if (foe && c){
       const ang = Math.atan2(c.y - foe.y, c.x - foe.x);
-      steer(p, foe.x + Math.cos(ang)*9, foe.y + Math.sin(ang)*9, s);
+      steerBlock(p, foe, foe.x + Math.cos(ang)*9, foe.y + Math.sin(ang)*9, s);
     } else if (c) steer(p, c.x + 70, p.y, s*0.8);
     return;
   }
@@ -3081,11 +3082,11 @@ function offenseAI(p, dt, isPass){
       if (G.hole){
         /* get a shoulder on the hole side and drive him off it */
         const seal = (foe.y >= G.hole.y) ? 1 : -1;
-        steer(p, foe.x - 5, foe.y - seal*7, s);
+        steerBlock(p, foe, foe.x - 5, foe.y - seal*7, s);
       } else {
         const c = focusPoint(p);
         const ang = Math.atan2(c.y-foe.y, c.x-foe.x);
-        steer(p, foe.x + Math.cos(ang)*8, foe.y + Math.sin(ang)*8, s);
+        steerBlock(p, foe, foe.x + Math.cos(ang)*8, foe.y + Math.sin(ang)*8, s);
       }
     } else if (G.hole){ steer(p, G.hole.x, G.hole.y, s*0.6); }
     else { p.vx = s*0.25; p.vy = 0; }
@@ -3121,6 +3122,16 @@ function runRoute(p, s){
 function steer(p, tx, ty, s){
   const dx = tx-p.x, dy = ty-p.y, d = Math.hypot(dx,dy)||1;
   p.vx = dx/d*s; p.vy = dy/d*s;
+}
+/* a blocker on his man: ease in to the spot instead of running through it
+   (full speed every frame overshot by a couple of pixels and snapped back,
+   so blockers shook and flipped left-right), and keep facing his man */
+function steerBlock(p, foe, tx, ty, s){
+  const dx = tx-p.x, dy = ty-p.y, d = Math.hypot(dx,dy)||1;
+  const v = Math.min(s, d * 8);
+  p.vx = dx/d*v; p.vy = dy/d*v;
+  if (Math.abs(foe.x - p.x) > 3) p.face = foe.x > p.x ? 1 : -1;
+  p.holdFace = Math.hypot(foe.x-p.x, foe.y-p.y) < 22;
 }
 function nearestFoe(p, maxD){
   let best=null, bd=maxD;
