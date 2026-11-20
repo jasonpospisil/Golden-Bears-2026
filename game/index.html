@@ -177,8 +177,9 @@
   .lrow .x{color:#8d846c;font-size:.85em}
   .lrow.first .nm{color:#fff}
   .lcard .none{color:#6f6852;font-size:clamp(5px,1vw,8px)}
-  #poList{width:min(520px,96%);max-height:52vh;overflow:auto;border:2px solid #3a3223;background:#12100a}
-  .wk.rd{color:var(--gold);background:#0d0b07;letter-spacing:2px;padding:5px 9px}
+  #poList{width:min(520px,96%);max-height:44vh;overflow:auto;border:2px solid #3a3223;background:#12100a}
+  .wk.rd{color:var(--gold);background:#0d0b07;letter-spacing:2px;padding:4px 9px}
+  #poList .wk{padding:4px 9px}
   .wk .tm{flex:1;display:flex;flex-direction:column;gap:2px}
   .wk .tm b{font-weight:normal}
   .wk .tm .lose{color:#6f6852}
@@ -375,7 +376,6 @@
       <div class="row">
         <button class="btn" id="goSeason">Season</button>
         <button class="btn" id="goPlay">Single game</button>
-        <button class="btn" id="goPlayoffs">Playoffs</button>
       </div>
       <div class="row">
         <button class="btn ghost" id="goIntro">Team intro</button>
@@ -404,8 +404,7 @@
       <p class="sub" id="poRec"></p>
       <div class="row">
         <button class="btn" id="poPlay">Play quarterfinal</button>
-        <button class="btn ghost" id="poNew">New playoffs</button>
-        <button class="btn ghost" id="poBack">Back</button>
+        <button class="btn ghost" id="poBack">Back to schedule</button>
       </div>
     </div>
 
@@ -3874,6 +3873,7 @@ function gameOver(){
       season.results[wk] = { us:G.score.user, them:G.score.cpu };
       season.week = Math.max(season.week, wk+1);
       addSeasonStats();
+      if (season.week >= SCHEDULE.length){ po = blankPlayoffs(); storePlayoffs(); }   /* season done: a fresh bracket */
       storeSeason();
     }
   }
@@ -5934,8 +5934,8 @@ function frame(now){
 }
 
 /* ================================================================ screens */
-const SCREENS = ['splash','title','lineup','season','matchup','select','playcall','fourth','roster','help','pause','conv','book','designer'];
-function hideScreens(){ SCREENS.forEach(s=>$(s).classList.remove('on')); }
+const SCREENS = ['splash','title','lineup','season','matchup','select','playcall','fourth','roster','help','pause','conv','book','designer','playoffs','leaders'];
+function hideScreens(){ document.querySelectorAll('.screen.on').forEach(e=>e.classList.remove('on')); }   /* every screen, including ones added later */
 function show(id){ hideScreens(); $(id).classList.add('on'); }
 
 /* ================================================== play-call song
@@ -6399,13 +6399,11 @@ function buildPlayoffs(){
   $('poPlay').textContent = nx ? 'Play ' + PO_ROUNDS[nx.ri].toLowerCase() : 'Playoffs over';
   $('poPlay').disabled = !nx; $('poPlay').style.opacity = nx ? 1 : .4;
 }
-$('goPlayoffs').addEventListener('click', ()=>{ buildPlayoffs(); show('playoffs'); });
 $('poPlay').addEventListener('click', ()=>{
   const n = poNext(); if (!n) return;
   showMatchup(n.opp, n.home, n.ri + 1, 'playoff');
 });
-$('poNew').addEventListener('click', ()=>{ po = blankPlayoffs(); storePlayoffs(); buildPlayoffs(); });
-$('poBack').addEventListener('click', ()=>show('title'));
+$('poBack').addEventListener('click', ()=>{ buildSeason(); show('season'); });
 
 /* ------------------------------------------------- season stat leaders
    Each finished season game's player lines are added into season.stats
@@ -6493,16 +6491,23 @@ function buildSeason(){
   const rec = seasonRecord();
   $('seasonRec').innerHTML = `${rec.w}&ndash;${rec.l}${rec.t?'&ndash;'+rec.t:''} &nbsp; ${rec.pf} for, ${rec.pa} against`;
   const done = season.week >= SCHEDULE.length;
-  $('playWeek').textContent = done ? 'Season finished' : `Play week ${season.week+1}`;
-  $('playWeek').disabled = done;
-  $('playWeek').style.opacity = done ? .4 : 1;
+  /* the regular season is 8 games; after that the same button runs the playoffs */
+  $('playWeek').textContent = !done ? `Play week ${season.week+1}`
+                             : poNext() ? 'Playoffs \u25b8' : 'Playoff bracket';
+  $('playWeek').disabled = false;
+  $('playWeek').style.opacity = 1;
+  if (done){
+    const champ = poChamp();
+    $('seasonRec').innerHTML += champ === 0 ? '<br>DIVISION 1 CHAMPIONS!'
+      : poOut() ? '<br>Playoffs over.' : '<br>Regular season done. On to the playoffs!';
+  }
 }
 $('playWeek').addEventListener('click', ()=>{
-  if (season.week >= SCHEDULE.length) return;
+  if (season.week >= SCHEDULE.length){ buildPlayoffs(); show('playoffs'); return; }
   const g = SCHEDULE[season.week];
   showMatchup(g.opp, g.home, season.week+1, 'season');
 });
-$('newSeason').addEventListener('click', ()=>{ season = blankSeason(); storeSeason(); buildSeason(); });
+$('newSeason').addEventListener('click', ()=>{ season = blankSeason(); storeSeason(); po = blankPlayoffs(); storePlayoffs(); buildSeason(); });
 $('seasonBack').addEventListener('click', ()=>show('title'));
 
 /* ------------------------------------------------------- pregame screen */
