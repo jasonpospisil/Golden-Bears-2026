@@ -111,6 +111,8 @@
   .diffnote{min-height:1em;font-size:clamp(6px,1.1vw,8px);color:#b9b29c;line-height:1.5;max-width:92vw}
   @media (max-height:420px){ .diffbox{gap:4px} }
   .pchome{font-size:clamp(6px,1.1vw,8px);padding:7px 11px;box-shadow:inset 0 0 0 2px #4a3f28;color:#b9b29c}
+  .pcrow{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  .pcfg{font-size:clamp(6px,1.1vw,8px);padding:7px 11px;box-shadow:inset 0 0 0 2px var(--gold);color:var(--gold)}
   .pchome.armed{color:#ff5aa8;box-shadow:inset 0 0 0 2px #ff5aa8}
   .pcbar{
     display:flex;align-items:flex-start;justify-content:space-between;
@@ -462,7 +464,10 @@
       <div class="plays" id="playGrid"></div>
       <div class="pcfield" id="pcField"></div>
       <p class="sub" id="pcHint"></p>
-      <button class="btn ghost pchome" id="pcHome">Home screen</button>
+      <div class="pcrow">
+        <button class="btn ghost pcfg" id="pcFG">Kick field goal</button>
+        <button class="btn ghost pchome" id="pcHome">Home screen</button>
+      </div>
     </div>
 
     <!-- 4th down -->
@@ -3920,6 +3925,7 @@ function gameOverScreen(){
     $('resume').textContent = 'Play again';
   }
 
+  $('btnShake').style.display = 'none';           /* a pause-menu setting; not on the final screen */
   $('pauseTitle').textContent = u>c ? 'BEARS WIN' : 'FINAL';
   $('pauseInfo').innerHTML =
     `${teamOf(true).abbr} ${u} &nbsp;&mdash;&nbsp; ${teamOf(false).abbr} ${c}<br><br>${tail}`;
@@ -4116,6 +4122,11 @@ function showPlayCall(){
 
   $('pcField').innerHTML = fieldStrip();
   disarmHome();
+  /* a field goal on any down, once you're close enough (not on a 2-point try) */
+  const fgD = (100 - G.ballOn) + 17;
+  const canFG = userCallsOffense && !G.conv && fgD <= FG_MAX_CALL;
+  $('pcFG').style.display = canFG ? '' : 'none';
+  $('pcFG').textContent = `Kick field goal (${fgD} yds)`;
   $('pcHint').textContent = userCallsOffense
     ? 'Pick a play. They are guessing too.'
     : 'Pick the play you expect them to run.';
@@ -4123,6 +4134,11 @@ function showPlayCall(){
 }
 
 function ordinal(n){ return ['','1ST','2ND','3RD','4TH'][n]||n; }
+const FG_MAX_CALL = 55;                          /* the button shows from the 38 in (a 55-yard try) */
+$('pcFG').addEventListener('click', ()=>{
+  if (!$('playcall').classList.contains('on') || !G.offIsUser || G.conv) return;
+  hideScreens(); startKick('fg');
+});
 
 function pickPlay(i){
   if (!$('playcall').classList.contains('on')) return;     /* already picked (pointerup and click both fire) */
@@ -6174,6 +6190,7 @@ function togglePause(){
     $('pauseTitle').textContent='Paused';
     $('pauseInfo').innerHTML = `${teamOf(true).abbr} ${G.score.user} &mdash; ${teamOf(false).abbr} ${G.score.cpu}`;
     $('resume').textContent='Resume';
+    $('btnShake').style.display = '';
     show('pause');
   }
 }
