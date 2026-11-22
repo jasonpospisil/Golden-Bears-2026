@@ -4882,35 +4882,12 @@ function drawField(){
   }
 
   /* endzones */
-  /* one field for every game: the Golden Bears' home turf, logo in both end zones */
-  const GB = TEAMS[G.userTeam] || oT;
-  const ezCol = lum(GB.jersey) > 150 ? '#15120c' : GB.jersey;
-  const endzone = (x0, turn) => {
-    const team = GB, ex = Math.round(sx(x0)), ew = 10*PPY;
-    ctx.fillStyle = ezCol;
-    ctx.fillRect(ex, FIELD_TOP, ew, FIELD_H);
-    const logoOK = MID_LOGO.complete && MID_LOGO.naturalWidth > 0;
-    if (logoOK && ex < W && ex + ew > 0){
-      /* the script turned on its side so it runs the length of the end zone, reading from the field */
-      const k = Math.min((ew - 8) / MID_LOGO.naturalHeight, (FIELD_H - 28) / MID_LOGO.naturalWidth);
-      const lw = Math.round(MID_LOGO.naturalWidth * k), lh = Math.round(MID_LOGO.naturalHeight * k);
-      ctx.save();
-      ctx.translate(ex + ew/2, FIELD_TOP + FIELD_H/2);
-      ctx.rotate(turn * Math.PI / 2);
-      ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(MID_LOGO, -Math.round(lw/2), -Math.round(lh/2), lw, lh);
-      ctx.restore();
-    }
-    ctx.font = '10px "Press Start 2P", monospace';
-    ctx.textAlign='center'; ctx.textBaseline='middle';
-    const letters = logoOK ? [] : team.abbr.split('');
-    letters.forEach((ch,i)=>{
-      ctx.fillStyle = team.trim;
-      wText(ch, Math.round(sx(x0)) + 5*PPY, FIELD_TOP + FIELD_H/2 - (letters.length-1)*9 + i*18);
-    });
+  /* one field for every game: the Golden Bears' home turf, both end zones solid Bears gold */
+  const endzone = x0 => {
+    ctx.fillStyle = '#f5c233';
+    ctx.fillRect(Math.round(sx(x0)), FIELD_TOP, 10*PPY, FIELD_H);
   };
-  /* on a return the teams have swapped roles but not ends */
-  endzone(0, -1); endzone(GOAL_R, 1);
+  endzone(0); endzone(GOAL_R);
   drawEndStands(sx);
 
   /* yard lines */
