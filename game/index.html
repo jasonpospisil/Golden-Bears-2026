@@ -6008,10 +6008,12 @@ function kickWant(){
    old take into the new one, and the end of a clip crossfades back into
    its loop point — so nothing ever cuts in or out.                    */
 const FADE_IN = 1.4, FADE_OUT = 1.8, XFADE = 1.6;
-function makeTrack(b64, startAt){
-  return { b64, startAt, buf:null, loading:false, failed:false, cur:null, level:0 };
+function makeTrack(b64, startAt, gain){
+  return { b64, startAt, gain: gain || 1, buf:null, loading:false, failed:false, cur:null, level:0 };
 }
-const song = makeTrack(SONG_B64, SONG_START);     /* Goosebumps: play calls and the game */
+/* every play-call song is evened out to the same loudness (about -22 LUFS
+   before SONG_LEVEL): the clips came in anywhere from -33 to -14 */
+const song = makeTrack(SONG_B64, SONG_START, 3.67);     /* Goosebumps: play calls and the game */
 const kickSong = makeTrack(KICK_B64, 0);          /* Jungle: intros and the opening kickoff (clip starts 1s in) */
 function trackLoad(tr){
   if (tr.loading || tr.buf || tr.failed || !AC) return;
@@ -6130,6 +6132,7 @@ function elTick(tr, want, restart){
   }
 }
 function trackTick(tr, want, restart){
+  want *= tr.gain || 1;
   if (tr.failed || audioStuck()){
     if (tr.cur){ voiceStop(tr.cur, 0.3, tr); tr.cur = null; tr.level = 0; }
     elTick(tr, want, restart);
@@ -6154,28 +6157,28 @@ function trackTick(tr, want, restart){
    (never the same one twice in a row) and crossfades into it */
 const playTracks = [
   song,                                            /* Goosebumps, from 0:33 (clip trimmed there) */
-  makeTrack(BRIGHT_B64, 0),                        /* Bright Side, from 0:02 (clip trimmed there) */
-  makeTrack(SLIM_B64, 0),                          /* Slim Shady, from 0:02 (clip trimmed there) */
-  makeTrack(CONLEY11_B64, 0),                      /* Conley Bottom Ct 11 */
-  makeTrack(CONLEY10_B64, 0),                      /* Conley Bottom Ct 10 */
-  makeTrack(SANDMAN_B64, 0),                       /* Sandman, from 0:16 where the riff kicks in (clip trimmed there) */
-  makeTrack(SMALL_B64, 0),                         /* Small Things */
+  makeTrack(BRIGHT_B64, 0, 0.52),                        /* Bright Side, from 0:02 (clip trimmed there) */
+  makeTrack(SLIM_B64, 0, 0.45),                          /* Slim Shady, from 0:02 (clip trimmed there) */
+  makeTrack(CONLEY11_B64, 0, 0.42),                      /* Conley Bottom Ct 11 */
+  makeTrack(CONLEY10_B64, 0, 0.46),                      /* Conley Bottom Ct 10 */
+  makeTrack(SANDMAN_B64, 0, 0.43),                       /* Sandman, from 0:16 where the riff kicks in (clip trimmed there) */
+  makeTrack(SMALL_B64, 0, 0.44),                         /* Small Things */
   /* Conley Bottom Ct 12-25: dead air at the top cut off, all leveled to match */
-  makeTrack(C13_B64, 0),
-  makeTrack(C14_B64, 0),
-  makeTrack(C15_B64, 0),
-  makeTrack(C16_B64, 0),
-  makeTrack(C17_B64, 0),
-  makeTrack(C18_B64, 0),
-  makeTrack(C19_B64, 0),
-  makeTrack(C20_B64, 0),
+  makeTrack(C13_B64, 0, 0.44),
+  makeTrack(C14_B64, 0, 0.46),
+  makeTrack(C15_B64, 0, 0.42),
+  makeTrack(C16_B64, 0, 0.43),
+  makeTrack(C17_B64, 0, 0.45),
+  makeTrack(C18_B64, 0, 0.42),
+  makeTrack(C19_B64, 0, 0.41),
+  makeTrack(C20_B64, 0, 0.44),
   /* Conley Bottom Ct 12 and 21-25 */
-  makeTrack(C12_B64, 0),
-  makeTrack(C21_B64, 0),
-  makeTrack(C22_B64, 0),
-  makeTrack(C23_B64, 0),
-  makeTrack(C24_B64, 0),
-  makeTrack(C25_B64, 0)
+  makeTrack(C12_B64, 0, 0.44),
+  makeTrack(C21_B64, 0, 0.43),
+  makeTrack(C22_B64, 0, 0.43),
+  makeTrack(C23_B64, 0, 0.44),
+  makeTrack(C24_B64, 0, 0.48),
+  makeTrack(C25_B64, 0, 0.42)
 ];
 let playIdx = -1, pendIdx = -1, songOnCall = false;
 function songTick(){
