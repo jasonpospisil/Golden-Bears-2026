@@ -217,6 +217,10 @@
   #roster td{padding:3px 2px}
   #roster input:not(.nm){width:3.4em;padding:6px 2px}
   #roster select{min-width:9em}
+  .posnote{flex:0 0 auto;width:min(760px,100%);margin:0;padding:8px 10px;background:var(--gold);color:#1a1405;
+    border:2px solid #000;box-shadow:0 3px 0 var(--gold-dim);font-size:clamp(7px,1.5vw,11px);line-height:1.7;letter-spacing:1px}
+  .posnote small{display:block;font-size:.8em;letter-spacing:0;color:#3a2c05}
+  @media (max-height:520px){ .posnote{padding:5px 8px} .posnote small{display:none} }
   @media (max-height:520px){ #roster .sub, #lineup .sub{display:none} #roster h2, #lineup h2{font-size:10px} #roster .btn, #lineup .btn{padding:9px 12px} }
 
   /* playbook + designer */
@@ -491,8 +495,9 @@
 
     <!-- roster -->
     <div class="screen" id="roster">
-      <h2>Golden Bears depth chart</h2>
-      <p class="sub">Pick who starts at each spot. Ratings go with the position, not the player. Changes save automatically.</p>
+      <h2 id="rosterTitle">Golden Bears depth chart</h2>
+      <p class="posnote">RATINGS BELONG TO THE POSITION, NOT THE PLAYER<small>Spd, Pow and Hnd stay with the spot. Whoever you start there plays with those numbers.</small></p>
+      <p class="sub">Pick who starts at each spot. Changes save automatically.</p>
       <div class="tablewrap"><table id="rosterTable"></table></div>
       <div class="row">
         <button class="btn" id="rosterBack">Done</button>
@@ -4877,20 +4882,35 @@ function drawField(){
   }
 
   /* endzones */
-  const endzone = (team, x0) => {
-    ctx.fillStyle = team.jersey;
-    ctx.fillRect(Math.round(sx(x0)), FIELD_TOP, 10*PPY, FIELD_H);
+  /* one field for every game: the Golden Bears' home turf, logo in both end zones */
+  const GB = TEAMS[G.userTeam] || oT;
+  const ezCol = lum(GB.jersey) > 150 ? '#15120c' : GB.jersey;
+  const endzone = (x0, turn) => {
+    const team = GB, ex = Math.round(sx(x0)), ew = 10*PPY;
+    ctx.fillStyle = ezCol;
+    ctx.fillRect(ex, FIELD_TOP, ew, FIELD_H);
+    const logoOK = MID_LOGO.complete && MID_LOGO.naturalWidth > 0;
+    if (logoOK && ex < W && ex + ew > 0){
+      /* the script turned on its side so it runs the length of the end zone, reading from the field */
+      const k = Math.min((ew - 8) / MID_LOGO.naturalHeight, (FIELD_H - 28) / MID_LOGO.naturalWidth);
+      const lw = Math.round(MID_LOGO.naturalWidth * k), lh = Math.round(MID_LOGO.naturalHeight * k);
+      ctx.save();
+      ctx.translate(ex + ew/2, FIELD_TOP + FIELD_H/2);
+      ctx.rotate(turn * Math.PI / 2);
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(MID_LOGO, -Math.round(lw/2), -Math.round(lh/2), lw, lh);
+      ctx.restore();
+    }
     ctx.font = '10px "Press Start 2P", monospace';
     ctx.textAlign='center'; ctx.textBaseline='middle';
-    const letters = team.abbr.split('');
+    const letters = logoOK ? [] : team.abbr.split('');
     letters.forEach((ch,i)=>{
       ctx.fillStyle = team.trim;
       wText(ch, Math.round(sx(x0)) + 5*PPY, FIELD_TOP + FIELD_H/2 - (letters.length-1)*9 + i*18);
     });
   };
   /* on a return the teams have swapped roles but not ends */
-  if ((G.dir || 1) < 0){ endzone(dT, 0); endzone(oT, GOAL_R); }
-  else { endzone(oT, 0); endzone(dT, GOAL_R); }
+  endzone(0, -1); endzone(GOAL_R, 1);
   drawEndStands(sx);
 
   /* yard lines */
@@ -6819,6 +6839,17 @@ $('helpBack').addEventListener('click', ()=>show('title'));
 $('backTitle').addEventListener('click', ()=>show('title'));
 $('rosterBack').addEventListener('click', ()=>{
   saveRoster();
+  if (depthThen){
+    /* first time through: the depth chart is now set, carry on to the game */
+    depthSet = true;
+    try { localStorage.setItem(DEPTH_KEY, '1'); } catch(e){}
+    const go = depthThen; depthThen = null;
+    $('rosterTitle').textContent = 'Golden Bears depth chart';
+    $('rosterBack').textContent = 'Done';
+    show('title');
+    go();
+    return;
+  }
   if (lineupBack === 'matchup') show('matchup'); else show('title');
 });
 
@@ -6935,6 +6966,31 @@ $('resetRoster').addEventListener('click', ()=>{
   saveRoster(); buildRosterTable();
   $('rosterMsg').textContent = 'Back to the starting depth chart.';
 });
+
+/* first time playing: the depth chart has to be set before any game starts */
+var DEPTH_KEY = 'gbDepthSet1', depthSet = false, depthThen = null;
+try { depthSet = localStorage.getItem(DEPTH_KEY) === '1'; } catch(e){}
+function requireDepth(then){
+  depthThen = then; lineupBack = 'title';
+  $('rosterTitle').textContent = 'First, set your depth chart';
+  $('rosterBack').textContent = 'Lock it in';
+  buildRosterTable(); show('roster');
+  $('rosterMsg').textContent = 'Pick your starters, then lock it in to play.';
+}
+$('title').addEventListener('click', e=>{
+  if (depthSet) return;
+  const b = e.target && e.target.closest ? e.target.closest('#goSeason,#goPlay') : null;
+  if (!b) return;
+  e.stopPropagation(); e.preventDefault();
+  requireDepth(()=>b.click());
+}, true);
+/* backstop: no game starts by any other path until it's set */
+var newGameNow = newGame;
+newGame = function(){
+  const a = arguments;
+  if (depthSet) return newGameNow.apply(null, a);
+  requireDepth(()=>newGameNow.apply(null, a));
+};
 
 /* boot */
 Object.keys(PORTRAITS).forEach(portraitOf);
